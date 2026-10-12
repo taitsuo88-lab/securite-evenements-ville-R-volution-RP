@@ -46,9 +46,28 @@
     }
   }
 </script>
-<script>
-/* Stockage local : tout est enregistré dans ce navigateur (IndexedDB), sans serveur ni Firebase */
-(function(){
+<script type="module">
+/* ============================================================
+   STOCKAGE : Firebase (partagé entre PC) OU IndexedDB (local)
+   Remplissez FIREBASE_CONFIG ci-dessous pour activer le partage.
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDadRDW_xQER5YaF-Med4QtoS3uh8hTb0s",
+  authDomain: "revo-secu-ville.firebaseapp.com",
+  databaseURL: "https://revo-secu-ville-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "revo-secu-ville",
+  storageBucket: "revo-secu-ville.firebasestorage.app",
+  messagingSenderId: "426627296057",
+  appId: "1:426627296057:web:48061734fd216cca3756e8"
+};
+
+function firebaseConfigured(){
+  var c = window.FIREBASE_CONFIG || {};
+  return c.apiKey && c.apiKey !== "VOTRE_API_KEY" && c.projectId && c.projectId !== "VOTRE_PROJET_ID";
+}
+
+/* --- Mode local (IndexedDB) : fallback si Firebase non configuré --- */
+function makeLocalStore(){
   var DBN='sev_local_db',ST='docs',db=null,cache={};
   function open(){return new Promise(function(res,rej){
     if(!window.indexedDB){rej(new Error('IndexedDB indisponible dans ce navigateur.'));return;}
@@ -58,7 +77,8 @@
   function ready(){return db?Promise.resolve():open().then(function(d){db=d;});}
   function getAll(){return new Promise(function(res,rej){var q=db.transaction(ST).objectStore(ST).getAll();q.onsuccess=function(){res(q.result||[]);};q.onerror=function(){rej(q.error);};});}
   function run(fn){return ready().then(function(){return new Promise(function(res,rej){var t=db.transaction(ST,'readwrite');fn(t.objectStore(ST));t.oncomplete=function(){res();};t.onerror=t.onabort=function(){rej(t.error||new Error('Écriture impossible'));};});});}
-  window.LSPS_FB={
+  return {
+    mode:'local',
     connect:function(onData){return ready().then(getAll).then(function(arr){cache={};arr.forEach(function(d){cache[d.id]=d;});onData(arr);});},
     disconnect:function(){return Promise.resolve();},
     saveAgent:function(a){cache[a.id]=a;return run(function(st){st.put(a);});},
@@ -66,7 +86,89 @@
     dump:function(){return Object.keys(cache).map(function(k){return cache[k];});},
     getIdToken:function(){return Promise.resolve('local');}
   };
+}
+
+/* --- Mode Firebase (Firestore) : données partagées entre tous les PC --- */
+async function makeFirebaseStore(){
+  var { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+  var { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+  var app = initializeApp(window.FIREBASE_CONFIG);
+  var db = getFirestore(app);
+  var col = collection(db, "sev_docs");
+  var cache = {};
+  var unsub = null;
+
+  return {
+    mode:'firebase',
+    connect:function(onData){
+      return new Promise(function(res, rej){
+        if(unsub){ try{unsub();}catch(e){} unsub=null; }
+        unsub = onSnapshot(col, function(snap){
+          cache = {};
+          var arr = [];
+          snap.forEach(function(d){
+            var data = d.data();
+            /* id est la clé du document */
+            if(!data.id) data.id = d.id;
+            cache[data.id] = data;
+            arr.push(data);
+          });
+          onData(arr);
+          res();
+        }, function(err){
+          console.error(err);
+          rej(err);
+        });
+      });
+    },
+    disconnect:function(){
+      if(unsub){ try{unsub();}catch(e){} unsub=null; }
+      return Promise.resolve();
+    },
+    saveAgent:function(a){
+      if(!a || !a.id) return Promise.reject(new Error('Document sans id'));
+      cache[a.id] = a;
+      /* Firestore n'accepte pas undefined : on nettoie */
+      var clean = JSON.parse(JSON.stringify(a));
+      return setDoc(doc(db, "sev_docs", String(a.id)), clean);
+    },
+    deleteAgent:function(id){
+      delete cache[id];
+      return deleteDoc(doc(db, "sev_docs", String(id)));
+    },
+    dump:function(){return Object.keys(cache).map(function(k){return cache[k];});},
+    getIdToken:function(){return Promise.resolve('firebase');}
+  };
+}
+
+/* Initialisation : Firebase si configuré, sinon local */
+window.LSPS_FB_READY = (async function(){
+  try{
+    if(firebaseConfigured()){
+      window.LSPS_FB = await makeFirebaseStore();
+      console.info('[SEV] Mode Firebase — données partagées entre tous les PC');
+    } else {
+      window.LSPS_FB = makeLocalStore();
+      console.info('[SEV] Mode local — données uniquement sur cet appareil');
+    }
+  }catch(err){
+    console.error('[SEV] Firebase indisponible, bascule en mode local', err);
+    window.LSPS_FB = makeLocalStore();
+  }
+  return window.LSPS_FB;
 })();
+</script>
+<script>
+/* Pont non-module : attend que LSPS_FB soit prêt avant le reste de l'app */
+window.LSPS_FB = window.LSPS_FB || {
+  mode:'pending',
+  connect:function(onData){return window.LSPS_FB_READY.then(function(s){return s.connect(onData);});},
+  disconnect:function(){return window.LSPS_FB_READY.then(function(s){return s.disconnect();});},
+  saveAgent:function(a){return window.LSPS_FB_READY.then(function(s){return s.saveAgent(a);});},
+  deleteAgent:function(id){return window.LSPS_FB_READY.then(function(s){return s.deleteAgent(id);});},
+  dump:function(){return (window.LSPS_FB && window.LSPS_FB.mode!=='pending' && window.LSPS_FB.mode!==undefined) ? window.LSPS_FB.dump() : [];},
+  getIdToken:function(){return window.LSPS_FB_READY.then(function(s){return s.getIdToken();});}
+};
 </script>
 <style>
 :root{
@@ -826,7 +928,7 @@ function showApp(user) {
     agents = arr.filter(function(x){return !x._cfg;}); agents.forEach(function(a){applyGrille(a);});
     if(cf)loadP(cf);
     scheduleRender();setTimeout(function(){if(window.offerReset)window.offerReset();},600);
-    firebaseStatusText.textContent = 'Mode local — ' + (user.name || user.id) + (user.role==='admin'?' (admin)':'');
+    firebaseStatusText.textContent = ((window.LSPS_FB && window.LSPS_FB.mode==='firebase') ? '☁ Firebase (partagé) — ' : 'Mode local — ') + (user.name || user.id) + (user.role==='admin'?' (admin)':'');
   }).catch(function(err){
     console.error(err);
     firebaseStatusText.textContent = 'Erreur d’ouverture du stockage local';
