@@ -181,11 +181,15 @@ async function makeFirebaseStore(){
     saveAgent: function(a){
       if(!a || !a.id) return Promise.reject(new Error('Document sans id'));
       var key = String(a.id).replace(/[.#$\[\]]/g, '_');
-      cache[a.id] = a;
       var clean;
       try{ clean = JSON.parse(JSON.stringify(a)); }
-      catch(e){ return Promise.reject(new Error('Données non sérialisables')); }
-      return set(ref(db, "sev_docs/" + key), clean);
+      catch(e){ return Promise.reject(new Error('Données non sérialisables (photo trop lourde ?)')); }
+      if(!clean.id) clean.id = a.id;
+      cache[a.id] = clean;
+      console.info('[SEV] Écriture RTDB sev_docs/' + key);
+      return set(ref(db, "sev_docs/" + key), clean).then(function(){
+        console.info('[SEV] Écriture OK', key);
+      });
     },
     deleteAgent: function(id){
       var key = String(id).replace(/[.#$\[\]]/g, '_');
@@ -988,8 +992,11 @@ function showApp(user) {
     var cf=arr.filter(function(x){return x._cfg&&x.id==='__portail';})[0];CTS=arr.filter(function(x){return x._cfg&&/^ct_/.test(x.id);}).map(function(x){try{return JSON.parse(x.data);}catch(e){return null;}}).filter(Boolean);
     agents = arr.filter(function(x){return !x._cfg;}); agents.forEach(function(a){applyGrille(a);});
     if(cf)loadP(cf);
-    scheduleRender();setTimeout(function(){if(window.offerReset)window.offerReset();},600);
-    firebaseStatusText.textContent = (window.LSPS_FB && window.LSPS_FB.mode==='firebase' ? '☁ En ligne · synchro active — ' : '⚠ Hors ligne — ') + (user.name || user.id) + (user.role==='admin'?' (admin)':'');
+    scheduleRender();
+    /* offerReset désactivé en multi-utilisateur (effaçait les fiches partagées) */
+    var nAg = agents.length;
+    firebaseStatusText.textContent = (window.LSPS_FB && window.LSPS_FB.mode==='firebase' ? '☁ En ligne · synchro active · '+nAg+' fiche'+(nAg!==1?'s':'')+' — ' : '⚠ Hors ligne — ') + (user.name || user.id) + (user.role==='admin'?' (admin)':'');
+    console.info('[SEV] Données cloud reçues :', nAg, 'agents,', CTS.length, 'contrats');
   }).catch(function(err){
     console.error(err);
     firebaseStatusText.textContent = 'Erreur Firebase';
@@ -1131,13 +1138,13 @@ function persist(a){
   if(i<0)agents.unshift(a);else agents[i]=a;
   render();
   window.LSPS_FB.saveAgent(a).then(function(){
-    if(window.LSPS_FB && window.LSPS_FB.mode==='firebase'){
-      /* OK — les autres PC recevront la mise à jour via onValue */
-    }
+    console.info('[SEV] Fiche enregistrée en ligne :', a.id, a.nom);
+    etat('✓ Fiche synchronisée en ligne — visible pour tous les comptes');
   }).catch(function(err){
-    console.error(err);
-    var m = (err && err.code === 'PERMISSION_DENIED')
-      ? "Accès refusé par Firebase. Publiez les règles Realtime Database (.read/.write = true)."
+    console.error('[SEV] Échec saveAgent', err);
+    var code = err && (err.code || err.message) || '';
+    var m = /PERMISSION|permission/i.test(String(code))
+      ? "Accès refusé par Firebase. Règles : sev_docs read/write si auth != null + Auth Anonyme activée."
       : ("Erreur d’enregistrement en ligne : " + (err && err.message ? err.message : "échec"));
     etat(m);
   });
@@ -2503,9 +2510,7 @@ function askReset(){
   resetFiches();return true;
 }
 window.offerReset=function(){
-  try{if(localStorage.getItem('sev_reset_v1'))return;}catch(e){}
-  if(!agents.length)return;
-  askReset();
+  /* Ne plus proposer automatiquement de tout effacer (incompatible multi-PC) */
   try{localStorage.setItem('sev_reset_v1','1');}catch(e){}
 };
 $("rstFiches").onclick=askReset;
@@ -2679,6 +2684,7 @@ render();
 
 </body>
 </html>
+
 
 
 
