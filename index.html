@@ -1101,14 +1101,35 @@ var CAT_APT=["Carte pro APS","SSIAP 1","SSIAP 2","SSIAP 3","SST (secourisme)","V
 var CAT_DEF=["Retards fréquents","Absentéisme","Tenue négligée","Impulsivité","Communication difficile","Téléphone en service","Rapports incomplets","Manque d'autorité","Non-respect des consignes","Fatigue en poste"];
 var GRADES=["Agent stagiaire","Agent Sécurité Privé","Agent confirmé","Chef D'équipe Sécurité","Directeur Sécurité","2nd Responsable évènement Joueurs","Responsable évènement Joueurs"];
 var DOSSIERS_GRADE={
-  "Agent stagiaire":["Accueil / intégration","Formation et habilitations","Évaluation de stage"],
-  "Agent Sécurité Privé":["Formation / habilitations","Consignes de poste","Évaluations"],
+  "Agent stagiaire":["Accueil et intégration","Formation et habilitations","Évaluation de stage"],
+  "Agent Sécurité Privé":["Formation et habilitations","Consignes de poste","Évaluations"],
   "Agent confirmé":["Formation continue","Évaluations","Suivi administratif"],
   "Chef D'équipe Sécurité":["Planning équipe","Contrôles et briefings","Évaluations équipe"],
   "Directeur Sécurité":["Supervision des sites","Contrôles et rapports","Suivi équipe"],
   "2nd Responsable évènement Joueurs":["Gestion de l'évènement","Suivi joueurs","Rapports et incidents"],
   "Responsable évènement Joueurs":["Direction de l'évènement","Suivi des sites","Dossiers de gestion"]
 };
+
+/* Clés Firebase : interdit . # $ / [ ] -> on les remplace par un espace */
+function safeKey(k){return String(k).replace(/[.#$\/\[\]]/g," ").replace(/\s+/g," ").trim();}
+/* Anciens noms de dossiers (avant renommage) pour retrouver les données déjà saisies */
+var LEGACY_FOLDERS={"Formation et habilitations":["Formation / habilitations"],"Accueil et intégration":["Accueil / intégration"]};
+function folderGet(gd,name,suffix){
+  suffix=suffix||"";
+  var cands=[safeKey(name)+suffix,name+suffix].concat((LEGACY_FOLDERS[name]||[]).map(function(l){return l+suffix;}));
+  for(var i=0;i<cands.length;i++){if(gd&&gd[cands[i]]!=null&&gd[cands[i]]!=="")return gd[cands[i]];}
+  return "";
+}
+/* Nettoie toutes les clés d'un objet dossiers d'un grade (migration des anciennes clés invalides) */
+function cleanFolderKeys(obj){
+  Object.keys(obj).forEach(function(k){
+    var nk=safeKey(k);
+    if(nk!==k){
+      if(obj[nk]==null||obj[nk]==="")obj[nk]=obj[k];
+      delete obj[k];
+    }
+  });
+}
 
 var FIL=[["tous","Tous les agents"],["Actif","En service"],["En congé","En permission"],["Inactif","Hors service"],["carte","Urgences cartes pro"],["essai","Essais terminés"]];
 var LKEY="effectifs_secu_ville_local_v1";
@@ -1321,8 +1342,8 @@ function drawGradeFolders(){
   if(old)old.remove();
 
   var gd=cur.dossiers[grade]||{};
-  var value=gd[active]||"";
-  var ref=gd[active+"_date"]||"";
+  var value=folderGet(gd,active);
+  var ref=folderGet(gd,active,"_date");
 
   var box=document.createElement("div");
   box.id="gradeFolderContentBox";
@@ -1341,12 +1362,16 @@ function saveGradeFolders(){
   var box=$("gradeFolders");
   if(box){
     document.querySelectorAll("textarea[data-folder]").forEach(function(el){
-      cur.dossiers[grade][el.dataset.folder]=el.value;
+      cur.dossiers[grade][safeKey(el.dataset.folder)]=el.value;
     });
     document.querySelectorAll("[data-folder-date]").forEach(function(el){
-      cur.dossiers[grade][el.dataset.folderDate+"_date"]=el.value;
+      cur.dossiers[grade][safeKey(el.dataset.folderDate)+"_date"]=el.value;
     });
   }
+  /* purge toutes les clés invalides (tous grades) avant envoi à Firebase */
+  Object.keys(cur.dossiers).forEach(function(g){
+    if(cur.dossiers[g]&&typeof cur.dossiers[g]==="object")cleanFolderKeys(cur.dossiers[g]);
+  });
 }
 
 function pickers(){
@@ -1535,7 +1560,7 @@ function recap(id){
   var dossiersHTML="";
   if(gdNames.length){
     dossiersHTML=gdNames.map(function(name){
-      var val=gd[name]||"", ref=gd[name+"_date"]||"";
+      var val=folderGet(gd,name), ref=folderGet(gd,name,"_date");
       if(!val&&!ref)return "";
       return '<div class="p-3 bg-dark-900 border border-slate-800 rounded-xl mb-2"><div class="text-xs font-bold text-brand-400 mb-1">'+esc(name)+'</div><div class="text-xs text-slate-300">'+esc(val).replace(/\n/g,"<br>")+(ref?'<div class="text-[10px] text-slate-500 mt-1">Ref/Date : '+esc(ref)+'</div>':'')+'</div></div>';
     }).join("");
