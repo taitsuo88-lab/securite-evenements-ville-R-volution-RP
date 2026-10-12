@@ -3,11 +3,12 @@
   Remplacez CHAQUE valeur REMPLACER_ avec les valeurs de votre application Web Firebase.
   Ce fichier ne doit contenir AUCUNE clé privée de compte de service.
 */
-window.SEV_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDyDdRDW_xQER5YaF-Med4qtoS3uh8hTb8s",
+const firebaseConfig = {
+  apiKey: "AIzaSyDadRDW_xQER5YaF-Med4QtoS3uh8hTb0s",
   authDomain: "revo-secu-ville.firebaseapp.com",
+  databaseURL: "https://revo-secu-ville-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "revo-secu-ville",
   storageBucket: "revo-secu-ville.firebasestorage.app",
   messagingSenderId: "426627296057",
-  appId: "1:426627296057:web:48061734fd21c6ca3756e8"
+  appId: "1:426627296057:web:48061734fd216cca3756e8"
 };
