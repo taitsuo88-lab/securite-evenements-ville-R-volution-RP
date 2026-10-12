@@ -145,6 +145,36 @@ async function makeFirebaseStore(){
     });
   });
 
+  /* RTDB interdit . # $ / [ ] dans les NOMS DE CLÉS (ex. "Formation / habilitations") */
+  function encKey(k){
+    return String(k).replace(/[.#$\/\[\]]/g, function(c){
+      return ({'.':'%2E','#':'%23','$':'%24','/':'%2F','[':'%5B',']':'%5D'})[c] || c;
+    });
+  }
+  function decKey(k){
+    return String(k)
+      .replace(/%2E/g,'.').replace(/%23/g,'#').replace(/%24/g,'$')
+      .replace(/%2F/g,'/').replace(/%5B/g,'[').replace(/%5D/g,']');
+  }
+  function encDeep(v){
+    if(Array.isArray(v)) return v.map(encDeep);
+    if(v && typeof v === 'object'){
+      var o = {};
+      Object.keys(v).forEach(function(k){ o[encKey(k)] = encDeep(v[k]); });
+      return o;
+    }
+    return v;
+  }
+  function decDeep(v){
+    if(Array.isArray(v)) return v.map(decDeep);
+    if(v && typeof v === 'object'){
+      var o = {};
+      Object.keys(v).forEach(function(k){ o[decKey(k)] = decDeep(v[k]); });
+      return o;
+    }
+    return v;
+  }
+
   function toArray(){
     return Object.keys(cache).map(function(k){ return cache[k]; });
   }
@@ -162,7 +192,8 @@ async function makeFirebaseStore(){
             Object.keys(val).forEach(function(id){
               var data = val[id];
               if(!data || typeof data !== 'object') return;
-              if(!data.id) data.id = id;
+              data = decDeep(data);
+              if(!data.id) data.id = decKey(id);
               cache[data.id] = data;
             });
           }
@@ -180,14 +211,15 @@ async function makeFirebaseStore(){
     },
     saveAgent: function(a){
       if(!a || !a.id) return Promise.reject(new Error('Document sans id'));
-      var key = String(a.id).replace(/[.#$\[\]]/g, '_');
+      var key = encKey(String(a.id)).replace(/[.#$\/\[\]]/g, '_');
       var clean;
       try{ clean = JSON.parse(JSON.stringify(a)); }
       catch(e){ return Promise.reject(new Error('Données non sérialisables (photo trop lourde ?)')); }
       if(!clean.id) clean.id = a.id;
       cache[a.id] = clean;
+      var payload = encDeep(clean);
       console.info('[SEV] Écriture RTDB sev_docs/' + key);
-      return set(ref(db, "sev_docs/" + key), clean).then(function(){
+      return set(ref(db, "sev_docs/" + key), payload).then(function(){
         console.info('[SEV] Écriture OK', key);
       });
     },
