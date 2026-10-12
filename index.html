@@ -48,10 +48,12 @@
 </script>
 <script type="module">
 /* ============================================================
-   STOCKAGE : Firebase (partagé entre PC) OU IndexedDB (local)
-   Remplissez FIREBASE_CONFIG ci-dessous pour activer le partage.
+   STOCKAGE EN LIGNE UNIQUEMENT — Firebase Firestore
+   1. console.firebase.google.com → créer projet + app Web
+  2. Activer Firestore Database
+   3. Coller votre config ci-dessous (remplacer VOTRE_...)
    ============================================================ */
-const firebaseConfig = {
+window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyDadRDW_xQER5YaF-Med4QtoS3uh8hTb0s",
   authDomain: "revo-secu-ville.firebaseapp.com",
   databaseURL: "https://revo-secu-ville-default-rtdb.europe-west1.firebasedatabase.app",
@@ -63,35 +65,34 @@ const firebaseConfig = {
 
 function firebaseConfigured(){
   var c = window.FIREBASE_CONFIG || {};
-  return c.apiKey && c.apiKey !== "VOTRE_API_KEY" && c.projectId && c.projectId !== "VOTRE_PROJET_ID";
+  return !!(c.apiKey && c.apiKey !== "VOTRE_API_KEY" && c.projectId && c.projectId !== "VOTRE_PROJET_ID");
 }
 
-/* --- Mode local (IndexedDB) : fallback si Firebase non configuré --- */
-function makeLocalStore(){
-  var DBN='sev_local_db',ST='docs',db=null,cache={};
-  function open(){return new Promise(function(res,rej){
-    if(!window.indexedDB){rej(new Error('IndexedDB indisponible dans ce navigateur.'));return;}
-    var r=indexedDB.open(DBN,1);
-    r.onupgradeneeded=function(){r.result.createObjectStore(ST,{keyPath:'id'});};
-    r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};});}
-  function ready(){return db?Promise.resolve():open().then(function(d){db=d;});}
-  function getAll(){return new Promise(function(res,rej){var q=db.transaction(ST).objectStore(ST).getAll();q.onsuccess=function(){res(q.result||[]);};q.onerror=function(){rej(q.error);};});}
-  function run(fn){return ready().then(function(){return new Promise(function(res,rej){var t=db.transaction(ST,'readwrite');fn(t.objectStore(ST));t.oncomplete=function(){res();};t.onerror=t.onabort=function(){rej(t.error||new Error('Écriture impossible'));};});});}
-  return {
-    mode:'local',
-    connect:function(onData){return ready().then(getAll).then(function(arr){cache={};arr.forEach(function(d){cache[d.id]=d;});onData(arr);});},
-    disconnect:function(){return Promise.resolve();},
-    saveAgent:function(a){cache[a.id]=a;return run(function(st){st.put(a);});},
-    deleteAgent:function(id){delete cache[id];return run(function(st){st.delete(id);});},
-    dump:function(){return Object.keys(cache).map(function(k){return cache[k];});},
-    getIdToken:function(){return Promise.resolve('local');}
-  };
-}
+window.SEV_SHOW_FIREBASE_SETUP = function(){
+  var old = document.getElementById('sevFbSetup');
+  if(old) old.remove();
+  var el = document.createElement('div');
+  el.id = 'sevFbSetup';
+  el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#040a18;color:#f1f3f9;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif';
+  el.innerHTML = '<div style="max-width:560px;width:100%;background:#0d1b3b;border:1px solid #24386a;border-radius:16px;padding:28px">'
+    +'<h1 style="font-size:20px;margin:0 0 12px;color:#4aa3ff">Configuration Firebase requise</h1>'
+    +'<p style="font-size:14px;line-height:1.55;color:#94a3b8;margin:0 0 16px">Ce portail fonctionne <b style="color:#fff">uniquement en ligne</b> via Firebase. Aucune donnée n’est stockée localement.</p>'
+    +'<ol style="font-size:13px;line-height:1.7;color:#cbd5e1;padding-left:18px;margin:0 0 16px">'
+    +'<li>Ouvrez <a href="https://console.firebase.google.com" target="_blank" style="color:#4aa3ff">console.firebase.google.com</a></li>'
+    +'<li>Créez un projet → ajoutez une app <b>Web</b></li>'
+    +'<li>Activez <b>Firestore Database</b></li>'
+    +'<li>Copiez le bloc <code style="background:#08122b;padding:2px 6px;border-radius:4px">firebaseConfig</code></li>'
+    +'<li>Dans <code style="background:#08122b;padding:2px 6px;border-radius:4px">index.html</code>, remplacez <code style="background:#08122b;padding:2px 6px;border-radius:4px">FIREBASE_CONFIG</code></li>'
+    +'<li>Règles Firestore (test) : <code style="background:#08122b;padding:2px 6px;border-radius:4px;font-size:11px">allow read, write: if true;</code> sur <code style="background:#08122b;padding:2px 6px;border-radius:4px">sev_docs</code></li>'
+    +'</ol>'
+    +'<p style="font-size:12px;color:#64748b;margin:0">Puis republiez sur GitHub Pages et rechargez cette page.</p>'
+    +'</div>';
+  document.body.appendChild(el);
+};
 
-/* --- Mode Firebase (Firestore) : données partagées entre tous les PC --- */
 async function makeFirebaseStore(){
   var { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
-  var { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+  var { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
   var app = initializeApp(window.FIREBASE_CONFIG);
   var db = getFirestore(app);
   var col = collection(db, "sev_docs");
@@ -99,8 +100,8 @@ async function makeFirebaseStore(){
   var unsub = null;
 
   return {
-    mode:'firebase',
-    connect:function(onData){
+    mode: 'firebase',
+    connect: function(onData){
       return new Promise(function(res, rej){
         if(unsub){ try{unsub();}catch(e){} unsub=null; }
         unsub = onSnapshot(col, function(snap){
@@ -108,7 +109,6 @@ async function makeFirebaseStore(){
           var arr = [];
           snap.forEach(function(d){
             var data = d.data();
-            /* id est la clé du document */
             if(!data.id) data.id = d.id;
             cache[data.id] = data;
             arr.push(data);
@@ -116,58 +116,78 @@ async function makeFirebaseStore(){
           onData(arr);
           res();
         }, function(err){
-          console.error(err);
+          console.error('[SEV] Firestore error', err);
           rej(err);
         });
       });
     },
-    disconnect:function(){
+    disconnect: function(){
       if(unsub){ try{unsub();}catch(e){} unsub=null; }
       return Promise.resolve();
     },
-    saveAgent:function(a){
+    saveAgent: function(a){
       if(!a || !a.id) return Promise.reject(new Error('Document sans id'));
       cache[a.id] = a;
-      /* Firestore n'accepte pas undefined : on nettoie */
       var clean = JSON.parse(JSON.stringify(a));
       return setDoc(doc(db, "sev_docs", String(a.id)), clean);
     },
-    deleteAgent:function(id){
+    deleteAgent: function(id){
       delete cache[id];
       return deleteDoc(doc(db, "sev_docs", String(id)));
     },
-    dump:function(){return Object.keys(cache).map(function(k){return cache[k];});},
-    getIdToken:function(){return Promise.resolve('firebase');}
+    dump: function(){ return Object.keys(cache).map(function(k){ return cache[k]; }); },
+    getIdToken: function(){ return Promise.resolve('firebase'); }
   };
 }
 
-/* Initialisation : Firebase si configuré, sinon local */
 window.LSPS_FB_READY = (async function(){
-  try{
-    if(firebaseConfigured()){
-      window.LSPS_FB = await makeFirebaseStore();
-      console.info('[SEV] Mode Firebase — données partagées entre tous les PC');
+  if(!firebaseConfigured()){
+    window.LSPS_FB = {
+      mode: 'unconfigured',
+      connect: function(){ return Promise.reject(new Error('Firebase non configuré')); },
+      disconnect: function(){ return Promise.resolve(); },
+      saveAgent: function(){ return Promise.reject(new Error('Firebase non configuré')); },
+      deleteAgent: function(){ return Promise.reject(new Error('Firebase non configuré')); },
+      dump: function(){ return []; },
+      getIdToken: function(){ return Promise.resolve(null); }
+    };
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', function(){ window.SEV_SHOW_FIREBASE_SETUP(); });
     } else {
-      window.LSPS_FB = makeLocalStore();
-      console.info('[SEV] Mode local — données uniquement sur cet appareil');
+      window.SEV_SHOW_FIREBASE_SETUP();
     }
-  }catch(err){
-    console.error('[SEV] Firebase indisponible, bascule en mode local', err);
-    window.LSPS_FB = makeLocalStore();
+    return window.LSPS_FB;
   }
-  return window.LSPS_FB;
+  try{
+    window.LSPS_FB = await makeFirebaseStore();
+    console.info('[SEV] Firebase connecté — stockage en ligne partagé');
+    return window.LSPS_FB;
+  }catch(err){
+    console.error('[SEV] Échec Firebase', err);
+    window.LSPS_FB = {
+      mode: 'error',
+      connect: function(){ return Promise.reject(err); },
+      disconnect: function(){ return Promise.resolve(); },
+      saveAgent: function(){ return Promise.reject(err); },
+      deleteAgent: function(){ return Promise.reject(err); },
+      dump: function(){ return []; },
+      getIdToken: function(){ return Promise.resolve(null); }
+    };
+    alert('Impossible de se connecter à Firebase.\\n\\nVérifiez votre config et les règles Firestore.\\n\\n' + (err && err.message ? err.message : err));
+    return window.LSPS_FB;
+  }
 })();
 </script>
 <script>
-/* Pont non-module : attend que LSPS_FB soit prêt avant le reste de l'app */
+/* Pont : l’app attend LSPS_FB_READY (Firebase uniquement) */
 window.LSPS_FB = window.LSPS_FB || {
-  mode:'pending',
-  connect:function(onData){return window.LSPS_FB_READY.then(function(s){return s.connect(onData);});},
-  disconnect:function(){return window.LSPS_FB_READY.then(function(s){return s.disconnect();});},
-  saveAgent:function(a){return window.LSPS_FB_READY.then(function(s){return s.saveAgent(a);});},
-  deleteAgent:function(id){return window.LSPS_FB_READY.then(function(s){return s.deleteAgent(id);});},
-  dump:function(){return (window.LSPS_FB && window.LSPS_FB.mode!=='pending' && window.LSPS_FB.mode!==undefined) ? window.LSPS_FB.dump() : [];},
-  getIdToken:function(){return window.LSPS_FB_READY.then(function(s){return s.getIdToken();});}
+  mode: 'pending',
+  connect: function(onData){ return window.LSPS_FB_READY.then(function(s){ return s.connect(onData); }); },
+  disconnect: function(){ return window.LSPS_FB_READY.then(function(s){ return s.disconnect(); }); },
+  saveAgent: function(a){ return window.LSPS_FB_READY.then(function(s){ return s.saveAgent(a); }); },
+  deleteAgent: function(id){ return window.LSPS_FB_READY.then(function(s){ return s.deleteAgent(id); }); },
+  dump: function(){ return (window.LSPS_FB && window.LSPS_FB.mode === 'firebase') ? window.LSPS_FB.dump() : []; },
+  getIdToken: function(){ return window.LSPS_FB_READY.then(function(s){ return s.getIdToken(); }); }
 };
 </script>
 <style>
@@ -398,7 +418,7 @@ input,select,textarea{color:#ffb703!important}
     <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
     SÉCURITÉ ÉVÉNEMENTS DE LA VILLE · GTA V RP
   </span>
-  <span id="firebaseStatusText" class="text-slate-400">Mode local</span>
+  <span id="firebaseStatusText" class="text-slate-400">Connexion Firebase…</span>
 </div>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
@@ -928,7 +948,7 @@ function showApp(user) {
     agents = arr.filter(function(x){return !x._cfg;}); agents.forEach(function(a){applyGrille(a);});
     if(cf)loadP(cf);
     scheduleRender();setTimeout(function(){if(window.offerReset)window.offerReset();},600);
-    firebaseStatusText.textContent = ((window.LSPS_FB && window.LSPS_FB.mode==='firebase') ? '☁ Firebase (partagé) — ' : 'Mode local — ') + (user.name || user.id) + (user.role==='admin'?' (admin)':'');
+    firebaseStatusText.textContent = (window.LSPS_FB && window.LSPS_FB.mode==='firebase' ? '☁ En ligne (Firebase) — ' : '⚠ Hors ligne — ') + (user.name || user.id) + (user.role==='admin'?' (admin)':'');
   }).catch(function(err){
     console.error(err);
     firebaseStatusText.textContent = 'Erreur d’ouverture du stockage local';
@@ -2607,7 +2627,6 @@ render();
 
 </body>
 </html>
-
 
 
 
