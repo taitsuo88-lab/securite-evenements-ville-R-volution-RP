@@ -581,6 +581,15 @@ input,select,textarea{color:#ffb703!important}
 .loto-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .loto-confetti i{position:absolute;width:8px;height:8px;border-radius:2px;opacity:0;animation:lotoConf 1.2s ease-out forwards}
 @keyframes lotoConf{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(120px) rotate(360deg)}}
+
+#v-tombola .dm-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#v-tombola .dm-mode{text-align:left;padding:14px 16px;border-radius:12px;background:#0a0a0a;border:1px solid #334155;color:#ffb703;display:flex;flex-direction:column;gap:4px}
+#v-tombola .dm-mode b{font-size:15px;font-weight:800}
+#v-tombola .dm-mode span{font-size:12px;font-weight:500;color:#ffcf5c;line-height:1.4}
+#v-tombola .dm-mode.on{background:rgba(74,163,255,.14);border-color:#4aa3ff;box-shadow:0 0 0 2px rgba(74,163,255,.2)}
+#v-tombola .dm-outcome{padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#ffb703;font-size:14px;margin-bottom:12px}
+#v-tombola .dm-outcome.win{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.55);font-size:16px}
+@media(max-width:800px){#v-tombola .dm-modes{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="antialiased selection:bg-brand-500 selection:text-black">
@@ -708,6 +717,7 @@ input,select,textarea{color:#ffb703!important}
 <nav class="tabs">
   <button type="button" id="tabBtn-tombola" class="tab active" onclick="TB.tab('tombola')">Tombola</button>
   <button type="button" id="tabBtn-gunfight" class="tab" onclick="TB.tab('gunfight')">Gunfight Tombola</button>
+  <button type="button" id="tabBtn-deathmatch" class="tab" onclick="TB.tab('deathmatch')">Match à mort</button>
 </nav>
 <div id="tab-tombola">
 <div class="grid">
@@ -820,6 +830,84 @@ input,select,textarea{color:#ffb703!important}
   </section>
 </div>
 </div>
+<div id="tab-deathmatch" class="hidden">
+<div class="grid">
+  <section class="card">
+    <div class="stats">
+      <div class="stat"><b id="dmStatMode">—</b><span>Mode</span></div>
+      <div class="stat"><b id="dmStatPlayers">0</b><span>Joueurs inscrits</span></div>
+      <div class="stat"><b id="dmStatAlive">0</b><span>Survivants</span></div>
+      <div class="stat"><b id="dmStatPrizes">0</b><span>Prix tirés au sort</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Type de match</h2>
+    <div class="dm-modes">
+      <button type="button" id="dmModeTeam" class="dm-mode" onclick="TB.dmSetMode('team')"><b>⚔️ Match à mort par équipe</b><span>Des équipes s’affrontent : la dernière équipe avec des survivants gagne.</span></button>
+      <button type="button" id="dmModeFfa" class="dm-mode on" onclick="TB.dmSetMode('ffa')"><b>💀 Mêlée générale</b><span>Chacun pour soi : le dernier joueur en vie gagne.</span></button>
+    </div>
+  </section>
+
+  <section id="dmTeamsCard" class="card hidden">
+    <h2>Équipes</h2>
+    <div class="formgrid" style="grid-template-columns:2fr 1fr auto;align-items:end">
+      <div><label for="dmTeamName">Nom de l'équipe</label><input id="dmTeamName" placeholder="Ex. : Les Bleus" onkeydown="if(event.key==='Enter')TB.dmAddTeam()"></div>
+      <div><label for="dmTeamColor">Couleur</label><select id="dmTeamColor"></select></div>
+      <div><button class="primary" onclick="TB.dmAddTeam()">Créer l'équipe</button></div>
+    </div>
+    <div id="dmTeams" style="margin-top:14px"></div>
+  </section>
+
+  <section class="card">
+    <h2>Inscrire un joueur</h2>
+    <div class="idzone" id="dmZone" tabindex="0">
+      <input type="file" id="dmFile" accept="image/*">
+      <div id="dmDrop">🪪 <b>Collez (Ctrl+V)</b> la carte d'identité, ou cliquez / glissez une image<br><small>Le nom, le prénom et l'ID sont lus automatiquement — ou saisissez-les ci-dessous</small></div>
+      <img id="dmPreview" alt="Carte d'identité">
+    </div>
+    <div class="idstatus" id="dmStatus"></div>
+    <div class="formgrid4">
+      <div><label for="dmFirst">Prénom</label><input id="dmFirst" placeholder="Jean" oninput="TB.dmCheck()"></div>
+      <div><label for="dmLast">Nom</label><input id="dmLast" placeholder="Dupont" oninput="TB.dmCheck()"></div>
+      <div><label for="dmId">ID de carte</label><input id="dmId" placeholder="SAN-XXXXX"></div>
+      <div id="dmTeamSelWrap" class="hidden"><label for="dmTeamSel">Équipe</label><select id="dmTeamSel"></select></div>
+    </div>
+    <div class="idhint" id="dmHint"></div>
+    <div class="actions">
+      <button class="primary" id="dmAddBtn" onclick="TB.dmAddPlayer()">Inscrire le joueur</button>
+      <button class="secondary" onclick="TB.dmClearForm()">Effacer</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Joueurs</h2>
+    <div class="gf-muted" style="margin-bottom:10px">Clique sur « En vie / Éliminé » pour indiquer qui est encore debout pendant le combat.</div>
+    <div id="dmPlayers"></div>
+    <div class="actions">
+      <button class="secondary" onclick="TB.dmAll(true)">Tous en vie</button>
+      <button class="secondary" onclick="TB.dmAll(false)">Tous éliminés</button>
+      <button class="secondary" onclick="TB.dmResetMatch()">Remettre le match à zéro</button>
+      <button class="danger" onclick="TB.dmClearPlayers()">Tout supprimer</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Résultat et tirage des prix</h2>
+    <div id="dmOutcome" class="dm-outcome"></div>
+    <div class="gf-prizeform">
+      <div><label for="dmPrize">Prix à gagner</label><input id="dmPrize" type="text" placeholder="Ex. : Voiture, 10 000 $, Panier garni…"></div>
+      <div><label for="dmCount">Nombre de gagnants</label><input id="dmCount" type="number" min="1" value="1"></div>
+    </div>
+    <div class="actions">
+      <button class="success" id="dmDrawBtn" onclick="TB.dmDraw()">🎲 Tirage au sort parmi les survivants</button>
+      <button class="secondary" id="dmUndoBtn" onclick="TB.dmUndo()">↩️ Annuler le dernier tirage</button>
+    </div>
+    <div id="dmWins" class="gf-prizewins"></div>
+  </section>
+</div>
+</div>
+
 </div>
 </main>
 
@@ -3018,7 +3106,7 @@ const firebaseConfig = {
   appId: "1:50581731883:web:b016e492b299575840c86e"
 };
 
-let db, docRef, gfDocRef;
+let db, docRef, gfDocRef, dmDocRef;
 
 // ========== ÉTAT ==========
 let state = {
@@ -3271,49 +3359,91 @@ function addMore(id) {
   render();
 }
 
-// ========== CARTE D'IDENTITÉ (collage + OCR) ==========
-const idZone = $('idZone');
-function handleIdImage(file) {
+// ========== CARTE D'IDENTITÉ (collage + OCR) — partagé par la tombola et le match à mort ==========
+const ID_UI = {
+  tb: { zone:'idZone', file:'idFile', preview:'idPreview', drop:'idDrop', status:'idStatus', first:'firstName', last:'lastName', id:'idCard', focus:'ticketQty', check:() => checkExisting(), msg:'puis indique le nombre de tickets' },
+  dm: { zone:'dmZone', file:'dmFile', preview:'dmPreview', drop:'dmDrop', status:'dmStatus', first:'dmFirst', last:'dmLast', id:'dmId', focus:'dmAddBtn', check:() => dmCheck(), msg:'puis inscris le joueur' }
+};
+function handleIdImage(file, ui) {
+  ui = ui || ID_UI.tb;
   if (!file || !file.type.startsWith('image/')) return;
   const reader = new FileReader();
   reader.onload = e => {
-    $('idPreview').src = e.target.result;
-    $('idPreview').style.display = 'block';
-    $('idDrop').style.display = 'none';
-    runIdOCR(e.target.result);
+    $(ui.preview).src = e.target.result;
+    $(ui.preview).style.display = 'block';
+    $(ui.drop).style.display = 'none';
+    runIdOCR(e.target.result, ui);
   };
   reader.readAsDataURL(file);
 }
-$('idFile').addEventListener('change', () => { if ($('idFile').files[0]) handleIdImage($('idFile').files[0]); $('idFile').value = ''; });
-idZone.addEventListener('dragover', e => { e.preventDefault(); idZone.classList.add('dragover'); });
-idZone.addEventListener('dragleave', () => idZone.classList.remove('dragover'));
-idZone.addEventListener('drop', e => { e.preventDefault(); idZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleIdImage(e.dataTransfer.files[0]); });
+function bindIdZone(ui) {
+  const zone = $(ui.zone), inp = $(ui.file);
+  inp.addEventListener('change', () => { if (inp.files[0]) handleIdImage(inp.files[0], ui); inp.value = ''; });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleIdImage(e.dataTransfer.files[0], ui); });
+}
+bindIdZone(ID_UI.tb); bindIdZone(ID_UI.dm);
 document.addEventListener('paste', e => {
-  if ($('v-tombola').classList.contains('hidden') || $('tab-tombola').classList.contains('hidden')) return;
+  if ($('v-tombola').classList.contains('hidden')) return;
+  const ui = !$('tab-tombola').classList.contains('hidden') ? ID_UI.tb : !$('tab-deathmatch').classList.contains('hidden') ? ID_UI.dm : null;
+  if (!ui) return;
   const items = e.clipboardData && e.clipboardData.items;
   if (!items) return;
   for (const item of items) {
-    if (item.type.startsWith('image/')) { e.preventDefault(); handleIdImage(item.getAsFile()); break; }
+    if (item.type.startsWith('image/')) { e.preventDefault(); handleIdImage(item.getAsFile(), ui); break; }
   }
 });
 
-async function runIdOCR(dataUrl) {
-  const st = $('idStatus');
+// Prétraitement : agrandit les petites images (captures d'écran), passe en niveaux de gris
+function prepImage(dataUrl) {
+  return new Promise(resolve => {
+    const im = new Image();
+    im.onload = () => {
+      const maxDim = Math.max(im.width, im.height);
+      let sc = maxDim < 1600 ? Math.min(4, 2400 / maxDim) : (maxDim > 3000 ? 3000 / maxDim : 1);
+      sc = Math.max(sc, 0.5);
+      const c = document.createElement('canvas');
+      c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc);
+      const g = c.getContext('2d');
+      g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+      g.drawImage(im, 0, 0, c.width, c.height);
+      const d = g.getImageData(0, 0, c.width, c.height), p = d.data;
+      for (let i = 0; i < p.length; i += 4) { const y = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2]; p[i] = p[i + 1] = p[i + 2] = y; }
+      g.putImageData(d, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    im.onerror = () => resolve(dataUrl);
+    im.src = dataUrl;
+  });
+}
+
+async function runIdOCR(dataUrl, ui) {
+  ui = ui || ID_UI.tb;
+  const st = $(ui.status);
   st.className = 'idstatus loading'; st.textContent = 'Analyse de la carte en cours…';
   try {
     if (typeof Tesseract === 'undefined') await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
     if (typeof Tesseract === 'undefined') throw new Error('module OCR non chargé');
-    const result = await Tesseract.recognize(dataUrl, 'fra+eng', {
-      logger: m => { if (m.status === 'recognizing text' && m.progress != null) st.textContent = 'Reconnaissance… ' + Math.round(m.progress * 100) + '%'; }
-    });
-    const x = extractFields(result.data.text || '');
-    if (x.prenom) $('firstName').value = x.prenom;
-    if (x.nom) $('lastName').value = x.nom;
-    if (x.id) $('idCard').value = x.id;
+    const logger = m => { if (m.status === 'recognizing text' && m.progress != null) st.textContent = 'Reconnaissance… ' + Math.round(m.progress * 100) + '%'; };
+    // Passe 1 : image agrandie + niveaux de gris (bien meilleure sur les petites captures)
+    const prepped = await prepImage(dataUrl);
+    const r1 = await Tesseract.recognize(prepped, 'fra+eng', { logger });
+    let x = extractFields(r1.data.text || '');
+    // Passe 2 (si prénom/nom manquent) : image d'origine, on complète les champs vides
+    if (!x.prenom || !x.nom) {
+      st.textContent = 'Seconde analyse…';
+      const r2 = await Tesseract.recognize(dataUrl, 'fra+eng', { logger });
+      const y = extractFields(r2.data.text || '');
+      x = { prenom: x.prenom || y.prenom, nom: x.nom || y.nom, id: x.id || y.id };
+    }
+    if (x.prenom) $(ui.first).value = x.prenom;
+    if (x.nom) $(ui.last).value = x.nom;
+    if (x.id) $(ui.id).value = x.id;
     st.className = 'idstatus done';
-    st.textContent = (x.prenom || x.nom || x.id) ? '✓ Carte lue — vérifie les champs puis indique le nombre de tickets.' : '⚠ Rien de lisible : saisis les champs à la main.';
-    checkExisting();
-    $('ticketQty').focus(); $('ticketQty').select();
+    st.textContent = (x.prenom || x.nom || x.id) ? '✓ Carte lue — vérifie les champs ' + ui.msg + '.' : '⚠ Rien de lisible : saisis les champs à la main.';
+    ui.check();
+    const f = $(ui.focus); if (f) { f.focus(); if (f.select) f.select(); }
   } catch (err) {
     console.error(err);
     st.className = 'idstatus error'; st.textContent = '✗ Erreur OCR : ' + (err.message || 'échec');
@@ -3333,10 +3463,28 @@ function extractFields(text) {
   const isJunk = (s) => !s || s.length < 2 || isLabel(s) || /^\d{1,2}[\/\-.]\d{1,2}/.test(s) || /^[\d\s]+$/.test(s) || /barcode|code.?bar/i.test(s);
 
   // ═══════════════════════════════════════
+  // Stratégie 0 : libellés tolérants aux erreurs d'OCR ("PRtMom", "NOM OF FAMELE"…)
+  // → la valeur est sur la ligne suivante : "sonny corleone"
+  // ═══════════════════════════════════════
+  {
+    const fuzzy = l => /PR.{1,3}[NMO]{2,3}\W/i.test(l) || /NOM\s*(DE|OF|D[EF])\s*FA/i.test(l) || /\bNOM\b.{0,6}FAM/i.test(l);
+    const idx = lines.findIndex(fuzzy);
+    if (idx >= 0) {
+      for (let k = idx + 1; k <= Math.min(idx + 3, lines.length - 1); k++) {
+        const l = lines[k].replace(/^[^A-Za-zÀ-ÿ]+/, '').replace(/[^A-Za-zÀ-ÿ'’ -]+$/, '').trim();
+        if (!l || fuzzy(lines[k]) || isLabel(l) || /genre|carte|naissance|homme|femme|identit/i.test(l)) continue;
+        if (!/^[A-Za-zÀ-ÿ'’ -]{3,40}$/.test(l)) continue;
+        const w = l.split(/\s+/).filter(x => x.length > 1);
+        if (w.length >= 2) { prenom = w[0]; nom = w.slice(1).join(' '); break; }
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════
   // Stratégie 1 : libellés côte à côte sur une ligne
   // "PRÉNOM : NOM DE FAMILLE :" → valeurs sur la ligne suivante
   // ═══════════════════════════════════════
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length && !(prenom && nom); i++) {
     const line = lines[i];
     // Ligne qui contient à la fois PRÉNOM et NOM
     if (/PR[EÉ]NOM/i.test(line) && /NOM\s*(DE\s*FAMILLE)?/i.test(line)) {
@@ -3439,13 +3587,20 @@ function extractFields(text) {
   }
 
   // Nettoyage final : retirer les libellés qui auraient fuité
-  prenom = cleanName(prenom);
-  nom = cleanName(nom);
+  prenom = properCase(cleanName(prenom));
+  nom = properCase(cleanName(nom));
   // Si le "prénom" est en fait un libellé, on le jette
   if (isLabel(prenom) || /^(nom|genre|id|date|homme|femme)/i.test(prenom)) prenom = '';
   if (isLabel(nom) || /^(genre|id|date|homme|femme|pr[eé]nom)/i.test(nom)) nom = '';
 
   return { prenom, nom, id };
+}
+
+function properCase(s) {
+  if (!s) return '';
+  // « sonny corleone » ou « SONNY CORLEONE » -> « Sonny Corleone » (on respecte une casse déjà mixte)
+  if (s !== s.toLowerCase() && s !== s.toUpperCase()) return s;
+  return s.toLowerCase().replace(/(^|[\s'’-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
 }
 
 function cleanName(s) {
@@ -3726,12 +3881,13 @@ function render() {
 
 // ========== ONGLETS ==========
 function tab(name) {
-  ['tombola', 'gunfight'].forEach(t => {
+  ['tombola', 'gunfight', 'deathmatch'].forEach(t => {
     $('tab-' + t).classList.toggle('hidden', t !== name);
     $('tabBtn-' + t).classList.toggle('active', t === name);
   });
   try { localStorage.setItem('tombolaTab', name); } catch (e) {}
   if (name === 'gunfight') gfRender();
+  if (name === 'deathmatch') dmRender();
 }
 
 // ========== GUNFIGHT TOMBOLA ==========
@@ -4144,6 +4300,274 @@ function gfMatchHTML(m) {
   </div>`;
 }
 
+
+// ========== MATCH À MORT (par équipe) / MÊLÉE GÉNÉRALE ==========
+let dm = { mode: 'ffa', teams: [], players: [], alive: {}, draws: [] };
+let dmBusy = false;
+const dmLocked = () => dm.draws.length > 0;
+const dmTeam = id => dm.teams.find(t => t.id === id);
+
+async function dmSave() {
+  try {
+    await dmDocRef.set({
+      mode: dm.mode, teams: dm.teams, players: dm.players, alive: dm.alive, draws: dm.draws,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Erreur sauvegarde Match à mort:', err);
+    alert('Erreur de connexion. Vérifie ta connexion internet ou les règles Firestore.');
+  }
+}
+
+function startDM() {
+  dmDocRef.onSnapshot(
+    snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        dm = { mode: d.mode === 'team' ? 'team' : 'ffa', teams: d.teams || [], players: d.players || [], alive: d.alive || {}, draws: d.draws || [] };
+      }
+      dmRender();
+    },
+    err => console.error('Erreur écoute Match à mort:', err)
+  );
+}
+
+function dmSetMode(mode) {
+  if (dmLocked()) { alert('Un tirage a déjà eu lieu : remets le match à zéro pour changer de mode.'); return; }
+  dm.mode = mode;
+  dmSave(); dmRender();
+}
+
+// ----- Équipes -----
+function dmAddTeam() {
+  const c = GF_COLORS[parseInt($('dmTeamColor').value) || 0];
+  const name = $('dmTeamName').value.trim() || 'Équipe ' + c.n;
+  dm.teams.push({ id: gfId(), name, color: c.h });
+  $('dmTeamName').value = '';
+  dmSave(); dmRender();
+}
+function dmRemoveTeam(tid) {
+  if (dmLocked()) { alert('Impossible après un tirage.'); return; }
+  const n = dm.players.filter(p => p.teamId === tid).length;
+  if (n && !confirm(`Supprimer cette équipe ? Ses ${n} joueur(s) n’auront plus d’équipe.`)) return;
+  dm.teams = dm.teams.filter(t => t.id !== tid);
+  dm.players.forEach(p => { if (p.teamId === tid) p.teamId = ''; });
+  dmSave(); dmRender();
+}
+
+// ----- Joueurs (même saisie que la tombola : carte d'identité collée / lue ou écrite) -----
+const dmFind = (prenom, nom) => (!prenom || !nom) ? null :
+  dm.players.find(p => normName(p.nom) === normName(nom) && normName(p.prenom) === normName(prenom));
+
+function dmCheck() {
+  const prenom = $('dmFirst').value.trim(), nom = $('dmLast').value.trim();
+  const hint = $('dmHint'), ex = dmFind(prenom, nom);
+  let html = '';
+  if (ex) {
+    hint.className = 'idhint';
+    html = `✅ <b>${esc(ex.prenom)} ${esc(ex.nom)}</b> est déjà inscrit — la fiche sera mise à jour (pas de doublon).`;
+    $('dmAddBtn').textContent = 'Mettre à jour le joueur';
+  } else {
+    hint.className = 'idhint new';
+    html = (prenom && nom) ? `🆕 Nouveau joueur : <b>${esc(prenom)} ${esc(nom)}</b>.` : '';
+    $('dmAddBtn').textContent = 'Inscrire le joueur';
+  }
+  hint.innerHTML = html;
+  hint.style.display = html ? 'block' : 'none';
+}
+
+function dmClearForm() {
+  $('dmFirst').value = ''; $('dmLast').value = ''; $('dmId').value = '';
+  $('dmPreview').style.display = 'none'; $('dmPreview').src = '';
+  $('dmDrop').style.display = ''; $('dmStatus').className = 'idstatus'; $('dmHint').style.display = 'none';
+  $('dmAddBtn').textContent = 'Inscrire le joueur';
+}
+
+function dmAddPlayer() {
+  const prenom = $('dmFirst').value.trim(), nom = $('dmLast').value.trim(), idCard = $('dmId').value.trim().toUpperCase();
+  if (!prenom || !nom) { alert('Merci de renseigner le nom et le prénom.'); return; }
+  if (dmLocked()) { alert('Un tirage a déjà eu lieu : remets le match à zéro pour modifier les joueurs.'); return; }
+  let teamId = '';
+  if (dm.mode === 'team') {
+    teamId = $('dmTeamSel').value;
+    if (!dmTeam(teamId)) { alert('Crée d’abord une équipe et choisis-la pour ce joueur.'); return; }
+  }
+  const ex = dmFind(prenom, nom);
+  if (ex) {
+    if (idCard) ex.idCard = idCard;
+    if (dm.mode === 'team') ex.teamId = teamId;
+  } else {
+    const p = { id: gfId(), prenom, nom, idCard, teamId };
+    dm.players.push(p);
+    dm.alive[p.id] = true;
+  }
+  dmClearForm();
+  dmSave(); dmRender();
+}
+
+function dmRemovePlayer(pid) {
+  if (dmLocked()) { alert('Impossible après un tirage. Remets le match à zéro d’abord.'); return; }
+  dm.players = dm.players.filter(p => p.id !== pid);
+  delete dm.alive[pid];
+  dmSave(); dmRender();
+}
+function dmSetTeam(pid, tid) {
+  const p = dm.players.find(x => x.id === pid);
+  if (!p || dmLocked()) return;
+  p.teamId = tid;
+  dmSave(); dmRender();
+}
+function dmToggle(pid) {
+  if (dmLocked()) return;
+  if (dm.alive[pid]) delete dm.alive[pid]; else dm.alive[pid] = true;
+  dmSave(); dmRender();
+}
+function dmAll(value) {
+  if (dmLocked()) return;
+  dm.players.forEach(p => { if (value) dm.alive[p.id] = true; else delete dm.alive[p.id]; });
+  dmSave(); dmRender();
+}
+
+// ----- Survivants, vainqueur, tirage -----
+const dmName = p => p.prenom + ' ' + p.nom;
+function dmSurvivors() {
+  return dm.players.filter(p => dm.alive[p.id]).map(p => {
+    const t = dm.mode === 'team' ? dmTeam(p.teamId) : null;
+    return { id: p.id, name: dmName(p), teamId: p.teamId || '', teamName: t ? t.name : (dm.mode === 'team' ? 'Sans équipe' : 'Mêlée générale'), color: t ? t.color : '#ffb703' };
+  });
+}
+function dmEligible() {
+  const won = new Set(dm.draws.flatMap(d => d.winners.map(w => w.id)));
+  return dmSurvivors().filter(p => !won.has(p.id));
+}
+function dmOutcome() {
+  const surv = dmSurvivors();
+  if (!dm.players.length) return { cls: '', html: 'Inscris des joueurs pour commencer.' };
+  if (!surv.length) return { cls: '', html: '☠️ Aucun survivant.' };
+  if (dm.mode === 'ffa') {
+    if (surv.length === 1) return { cls: 'win', html: `🏆 Vainqueur de la mêlée : <b>${esc(surv[0].name)}</b>` };
+    return { cls: '', html: `⚔️ Mêlée en cours — <b>${surv.length}</b> survivants sur ${dm.players.length}.` };
+  }
+  const ids = [...new Set(surv.map(p => p.teamId))];
+  if (ids.length === 1) {
+    const t = dmTeam(ids[0]);
+    return { cls: 'win', html: `🏆 Équipe gagnante : <b style="color:${t ? t.color : '#ffb703'}">${esc(t ? t.name : 'Sans équipe')}</b> — ${surv.length} survivant(s)` };
+  }
+  return { cls: '', html: `⚔️ Match en cours — <b>${surv.length}</b> survivants répartis dans <b>${ids.length}</b> équipes.` };
+}
+
+async function dmDraw() {
+  if (dmBusy) return;
+  const prize = $('dmPrize').value.trim();
+  if (!prize) { alert('Donne un nom au prix avant de lancer le tirage.'); return; }
+  const count = Math.max(1, parseInt($('dmCount').value) || 1);
+  const pool = dmEligible();
+  if (!pool.length) { alert('Aucun survivant éligible.'); return; }
+  if (pool.length < count) { alert(`Il n’y a que ${pool.length} survivant(s) éligible(s) pour ${count} gagnant(s) demandé(s).`); return; }
+  dmBusy = true;
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const winners = shuffled.slice(0, count);
+  const overlay = createLotoOverlay(prize);
+  const balls = $('lotoBalls'), reveal = $('lotoReveal'), sub = $('lotoSub');
+  let animPool = [...pool];
+  for (let i = 0; i < winners.length; i++) {
+    const w = winners[i];
+    sub.textContent = winners.length > 1 ? `Tirage du gagnant ${i + 1} sur ${winners.length}…` : 'Tirage du gagnant…';
+    reveal.innerHTML = `<strong>🎱 Roulement des noms…</strong><small>Parmi les survivants</small>`;
+    await gfSpin(animPool.map(p => p.name), w.name);
+    const ball = document.createElement('div');
+    ball.className = 'loto-ball';
+    ball.textContent = w.name.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
+    ball.style.background = `radial-gradient(circle at 30% 28%,#fff,${w.color} 55%,#222)`;
+    balls.appendChild(ball);
+    reveal.innerHTML = `<strong>🎉 ${esc(w.name)}</strong><small>${esc(w.teamName)} — remporte « ${esc(prize)} »</small>`;
+    spawnConfetti();
+    animPool = animPool.filter(p => p.id !== w.id);
+    await sleep(900);
+  }
+  sub.textContent = 'Tirage terminé !';
+  $('lotoActions').classList.remove('hidden');
+  await new Promise(resolve => { $('lotoCloseBtn').onclick = () => { overlay.remove(); resolve(); }; });
+  dm.draws.push({ id: gfId(), prize, winners });
+  $('dmPrize').value = '';
+  await dmSave();
+  dmBusy = false;
+  dmRender();
+}
+function dmUndo() {
+  if (!dm.draws.length) return;
+  dm.draws.pop();
+  dmSave(); dmRender();
+}
+function dmResetMatch() {
+  if (!confirm('Remettre le match à zéro ? Tous les joueurs repassent en vie et les tirages de prix sont effacés (les joueurs inscrits sont conservés).')) return;
+  dm.alive = {}; dm.players.forEach(p => { dm.alive[p.id] = true; });
+  dm.draws = [];
+  dmSave(); dmRender();
+}
+function dmClearPlayers() {
+  if (!confirm('Supprimer tous les joueurs, équipes et tirages du match à mort ?')) return;
+  dm = { mode: dm.mode, teams: [], players: [], alive: {}, draws: [] };
+  dmSave(); dmRender();
+}
+
+// ----- Rendu -----
+function dmRender() {
+  const team = dm.mode === 'team';
+  $('dmModeTeam').classList.toggle('on', team);
+  $('dmModeFfa').classList.toggle('on', !team);
+  $('dmTeamsCard').classList.toggle('hidden', !team);
+  $('dmTeamSelWrap').classList.toggle('hidden', !team);
+  const surv = dmSurvivors();
+  $('dmStatMode').textContent = team ? 'Par équipe' : 'Mêlée';
+  $('dmStatPlayers').textContent = dm.players.length;
+  $('dmStatAlive').textContent = surv.length;
+  $('dmStatPrizes').textContent = dm.draws.length;
+
+  if (!$('dmTeamColor').options.length) {
+    $('dmTeamColor').innerHTML = GF_COLORS.map((c, i) => `<option value="${i}">${c.e} ${c.n}</option>`).join('');
+  }
+  const prev = $('dmTeamSel').value;
+  $('dmTeamSel').innerHTML = dm.teams.length
+    ? dm.teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')
+    : '<option value="">— Aucune équipe —</option>';
+  if (prev && dmTeam(prev)) $('dmTeamSel').value = prev;
+
+  $('dmTeams').innerHTML = dm.teams.length
+    ? '<div class="gf-teams">' + dm.teams.map(t => {
+        const n = dm.players.filter(p => p.teamId === t.id), a = n.filter(p => dm.alive[p.id]).length;
+        return `<div class="gf-team" style="border-left-color:${t.color}">
+          <div class="gf-team-head"><span class="gf-dot" style="background:${t.color}"></span><h3>${esc(t.name)}</h3>
+          <span class="gf-muted">${a}/${n.length} en vie</span>
+          <button class="danger gf-small" ${dmLocked() ? 'disabled' : ''} onclick="TB.dmRemoveTeam('${t.id}')">Supprimer</button></div></div>`;
+      }).join('') + '</div>'
+    : '<div class="empty">Aucune équipe pour le moment.</div>';
+
+  const locked = dmLocked();
+  $('dmPlayers').innerHTML = dm.players.length
+    ? `<div class="tablewrap"><table><thead><tr><th>Joueur</th>${team ? '<th>Équipe</th>' : ''}<th>État</th><th></th></tr></thead><tbody>` +
+      dm.players.map(p => {
+        const teamCell = team ? `<td><select ${locked ? 'disabled' : ''} onchange="TB.dmSetTeam('${p.id}',this.value)" style="border-left:5px solid ${(dmTeam(p.teamId) || {}).color || '#334155'}">
+            <option value="">— Aucune —</option>${dm.teams.map(t => `<option value="${t.id}" ${t.id === p.teamId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></td>` : '';
+        return `<tr><td>${esc(p.prenom)} ${esc(p.nom)}${p.idCard ? `<span class="idtag">🪪 ${esc(p.idCard)}</span>` : ''}</td>${teamCell}
+          <td><button class="gf-player ${dm.alive[p.id] ? 'alive' : ''}" ${locked ? 'disabled' : ''} onclick="TB.dmToggle('${p.id}')">${dm.alive[p.id] ? '❤️ En vie' : '☠️ Éliminé'}</button></td>
+          <td><button class="danger gf-small" ${locked ? 'disabled' : ''} onclick="TB.dmRemovePlayer('${p.id}')">Retirer</button></td></tr>`;
+      }).join('') + '</tbody></table></div>'
+    : '<div class="empty">Aucun joueur inscrit.</div>';
+
+  const o = dmOutcome();
+  $('dmOutcome').className = 'dm-outcome ' + o.cls;
+  $('dmOutcome').innerHTML = o.html + ` <span class="gf-muted">· 🎟️ Éligibles au tirage : <b>${dmEligible().length}</b></span>`;
+  $('dmDrawBtn').disabled = false;
+  $('dmUndoBtn').disabled = !dm.draws.length;
+  $('dmWins').innerHTML = dm.draws.map(d => `<div class="winner"><strong>🏆 ${esc(d.prize)}</strong>${d.winners.map(w =>
+    `<small style="display:block;margin-top:3px"><span style="color:${w.color}">●</span> 🎉 <b style="color:#ffb703">${esc(w.name)}</b> — ${esc(w.teamName)}</small>`).join('')}</div>`).join('');
+}
+
 // Re-render différé si une mise à jour est arrivée pendant la saisie
 document.addEventListener('focusout', () => {
   setTimeout(() => { if (gfPending && !gfTyping()) gfRender(); }, 60);
@@ -4159,8 +4583,8 @@ function loadScript(src){
 let initPromise=null;
 function setStatus(t,err){ const e=$('tbStatus'); if(e){ e.textContent=t; e.style.color=err?'#f87171':'#ffcf5c'; } }
 function open(){
-  render(); gfRender();
-  try { const t = localStorage.getItem('tombolaTab'); if (t === 'gunfight') tab('gunfight'); } catch (e) {}
+  render(); gfRender(); dmRender();
+  try { const t = localStorage.getItem('tombolaTab'); if (t === 'gunfight' || t === 'deathmatch') tab(t); } catch (e) {}
   if(initPromise) return initPromise;
   setStatus('Connexion à la base de données de la tombola…');
   initPromise=(async()=>{
@@ -4170,13 +4594,14 @@ function open(){
     db = app.firestore();
     docRef = db.collection('tombolas').doc('current');
     gfDocRef = db.collection('tombolas').doc('gunfight');
-    startRealtime(); startGF();
+    dmDocRef = db.collection('tombolas').doc('deathmatch');
+    startRealtime(); startGF(); startDM();
     setStatus('Synchronisé en temps réel (Firebase) — visible par tous les utilisateurs.');
   })().catch(e=>{ console.error(e); initPromise=null; setStatus('Connexion impossible : '+(e.message||e),true); });
   return initPromise;
 }
 
-window.TB={addMore,addParticipant,applyDrawConfig,checkExisting,clearIdForm,drawNext,gfAddPlayers,gfAddTeam,gfCreateMatch,gfDraftSet,gfDraw,gfRemoveMatch,gfRemovePlayer,gfRemoveTeam,gfSetTeamAlive,gfToggleAlive,gfToggleSel,gfUndo,open,removeParticipant,resetAll,tab,undoLastDraw,updateDrawName};
+window.TB={addMore,addParticipant,applyDrawConfig,checkExisting,clearIdForm,drawNext,gfAddPlayers,gfAddTeam,gfCreateMatch,gfDraftSet,gfDraw,gfRemoveMatch,gfRemovePlayer,gfRemoveTeam,gfSetTeamAlive,gfToggleAlive,gfToggleSel,gfUndo,open,removeParticipant,resetAll,tab,undoLastDraw,updateDrawName,dmSetMode,dmAddTeam,dmRemoveTeam,dmCheck,dmClearForm,dmAddPlayer,dmRemovePlayer,dmSetTeam,dmToggle,dmAll,dmDraw,dmUndo,dmResetMatch,dmClearPlayers};
 })();
 </script>
 </body>
