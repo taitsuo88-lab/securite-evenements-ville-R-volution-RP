@@ -446,6 +446,142 @@ input,select,textarea{color:#ffb703!important}
 #side{background:linear-gradient(180deg,#101010,#000)!important;box-shadow:inset -1px 0 0 rgba(255,255,255,.1)!important}
 ::-webkit-scrollbar-track{background:#101010}
 </style>
+<style>
+/* ===== TOMBOLA (intégrée) — DA Sécurité Événements : noir, jaune orangé, accent bleu ===== */
+#v-tombola>h2{font-size:1.5rem;line-height:2rem;font-weight:900;letter-spacing:-.025em;background:linear-gradient(180deg,#ffd166 0%,#ffa200 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 8px rgba(4,20,60,.55))}
+#v-tombola>p.tb-sub{color:#ffcf5c;font-size:.875rem;margin-bottom:1.25rem}
+#v-tombola .hidden{display:none!important}
+#v-tombola .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+#v-tombola .tab{padding:8px 16px;border-radius:12px;font-size:13px;font-weight:700;background:#1a1a1a;color:#ffb703;border:1px solid #334155;transition:background .15s}
+#v-tombola .tab:hover{background:#242424}
+#v-tombola .tab.active{background:#4aa3ff;color:#000;border-color:#4aa3ff;font-weight:800;box-shadow:0 0 18px rgba(74,163,255,.28)}
+#v-tombola .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+#v-tombola .card{grid-column:span 12;background:linear-gradient(180deg,#262626 0%,#000 100%);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:20px;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)}
+#v-tombola .half{grid-column:span 6}
+#v-tombola h2.tb-h,#v-tombola .card>h2{margin:0 0 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#ffb703}
+#v-tombola h3{margin:0 0 8px;color:#ffb703;font-weight:800}
+#v-tombola label{display:block;font-weight:600;font-size:12px;margin:0 0 4px;color:#ffcf5c}
+#v-tombola input,#v-tombola select,#v-tombola textarea{width:100%;background:#0a0a0a;border:1px solid #334155;border-radius:10px;padding:9px 12px;font-size:14px;color:#ffb703;outline:none;font-family:inherit}
+#v-tombola textarea{resize:vertical}
+#v-tombola input::placeholder,#v-tombola textarea::placeholder{color:rgba(255,207,92,.55)}
+#v-tombola input:focus,#v-tombola select:focus,#v-tombola textarea:focus{border-color:#4aa3ff;box-shadow:0 0 0 3px rgba(74,163,255,.15)}
+#v-tombola option{background:#0a0a0a;color:#ffb703}
+#v-tombola .formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#v-tombola .formgrid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+#v-tombola button{border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;transition:filter .15s,background .15s}
+#v-tombola button:hover:not(:disabled){filter:brightness(1.12)}
+#v-tombola button:disabled{opacity:.45;cursor:not-allowed}
+#v-tombola .primary{background:#4aa3ff;color:#000;font-weight:800;box-shadow:0 0 18px rgba(74,163,255,.25)}
+#v-tombola .secondary{background:#1a1a1a;color:#ffb703;border:1px solid #334155}
+#v-tombola .secondary:hover:not(:disabled){background:#242424}
+#v-tombola .danger{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.35)}
+#v-tombola .success{background:#059669;color:#fff;font-weight:800}
+#v-tombola .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#v-tombola .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+#v-tombola .stat{background:linear-gradient(180deg,#262626 0%,#000 100%);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px 16px}
+#v-tombola .stat b{font-size:24px;font-weight:900;display:block;color:#ffb703}
+#v-tombola .stat span{color:#ffcf5c;font-size:12px}
+#v-tombola .tablewrap{overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:12px}
+#v-tombola table{width:100%;border-collapse:collapse;min-width:650px}
+#v-tombola th,#v-tombola td{text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;vertical-align:middle}
+#v-tombola th{background:#121212;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#ffcf5c}
+#v-tombola td{color:#ffb703}
+#v-tombola tr:last-child td{border-bottom:0}
+#v-tombola .badge{display:inline-block;background:rgba(255,183,3,.1);color:#ffb703;border:1px solid rgba(255,183,3,.35);border-radius:999px;padding:3px 9px;margin:2px;font-size:12px;font-weight:700}
+#v-tombola .ticket-list{max-width:390px;line-height:1.9}
+#v-tombola .batch-sep{display:inline-block;margin:0 6px;color:#4aa3ff;font-weight:800}
+#v-tombola .idtag{display:block;font-size:11px;color:#ffcf5c;font-weight:400}
+#v-tombola .draws{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+#v-tombola .draw{border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px;background:rgba(255,255,255,.04)}
+#v-tombola .draw.done{border-color:rgba(16,185,129,.55);background:rgba(16,185,129,.07)}
+#v-tombola .draw h3{margin-bottom:4px}
+#v-tombola .lot-label{font-size:12px;color:#ffcf5c;margin-bottom:6px}
+#v-tombola .lot-name-input{margin-top:4px;font-size:13px;padding:8px 10px}
+#v-tombola .draw-info{color:#ffcf5c;font-size:13px;margin-top:8px}
+#v-tombola .winner{background:rgba(255,183,3,.08);border-radius:10px;padding:10px;margin-top:8px;border:1px solid rgba(255,183,3,.3)}
+#v-tombola .winner strong{display:block;color:#ffb703}
+#v-tombola .winner small{color:#ffcf5c}
+#v-tombola .notice{padding:11px 14px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);color:#ffcf5c;margin-top:12px;font-size:13px;line-height:1.5}
+#v-tombola .empty{padding:22px;text-align:center;color:#ffcf5c;font-size:13px;font-style:italic}
+#v-tombola .idzone{position:relative;border:2px dashed rgba(255,183,3,.5);border-radius:12px;padding:16px;text-align:center;background:#0a0a0a;cursor:pointer;margin-bottom:14px;transition:.15s;font-size:13px;color:#ffb703}
+#v-tombola .idzone:hover,#v-tombola .idzone.dragover,#v-tombola .idzone:focus{border-color:#4aa3ff;background:#121212;outline:none}
+#v-tombola .idzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;padding:0}
+#v-tombola .idzone img{max-width:100%;max-height:150px;border-radius:8px;display:none;margin:8px auto 0}
+#v-tombola .idzone small{color:#ffcf5c}
+#v-tombola .idstatus{font-size:13px;margin:-4px 0 12px;display:none}
+#v-tombola .idstatus.loading{display:block;color:#4aa3ff}
+#v-tombola .idstatus.done{display:block;color:#10b981}
+#v-tombola .idstatus.error{display:block;color:#f87171}
+#v-tombola .idhint{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.4);color:#6ee7b7;font-size:13px;display:none}
+#v-tombola .idhint.new{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.35);color:#ffcf5c}
+#v-tombola .addmore{display:flex;gap:6px;align-items:center;min-width:150px}
+#v-tombola .addmore input{width:64px;padding:6px 8px}
+#v-tombola .addmore button{padding:7px 10px;font-size:12px;white-space:nowrap}
+/* Gunfight */
+#v-tombola .gf-teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+#v-tombola .gf-team{border:1px solid rgba(255,255,255,.14);border-left-width:6px;border-radius:14px;padding:14px 16px;background:rgba(255,255,255,.04)}
+#v-tombola .gf-team-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+#v-tombola .gf-team-head h3{margin:0;flex:1;min-width:100px}
+#v-tombola .gf-dot{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none}
+#v-tombola .gf-muted{color:#ffcf5c;font-size:12px}
+#v-tombola .gf-chip{cursor:default}
+#v-tombola .gf-chip b{cursor:pointer;margin-left:6px;color:#f87171}
+#v-tombola .gf-chip b:hover{color:#fff}
+#v-tombola .gf-small{padding:6px 10px;font-size:12px}
+#v-tombola .gf-checks{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
+#v-tombola .gf-check{cursor:pointer;user-select:none;border:1px solid #334155;border-radius:10px;padding:9px 13px;background:#0a0a0a;color:#ffb703;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+#v-tombola .gf-check.on{background:rgba(74,163,255,.14);border-color:#4aa3ff;box-shadow:0 0 0 2px rgba(74,163,255,.18)}
+#v-tombola .gf-matches{display:grid;gap:16px}
+#v-tombola .gf-match{border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px;background:rgba(255,255,255,.04)}
+#v-tombola .gf-match.done{border-color:rgba(16,185,129,.55)}
+#v-tombola .gf-match-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+#v-tombola .gf-match-head h3{margin:0}
+#v-tombola .gf-vs{margin:6px 0 12px;font-weight:800;font-size:15px}
+#v-tombola .gf-vs i{font-style:normal;color:#4aa3ff;margin:0 8px;font-size:12px;letter-spacing:1px}
+#v-tombola .gf-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+#v-tombola .gf-col{border:1px solid rgba(255,255,255,.14);border-top-width:4px;border-radius:12px;padding:12px;background:#0a0a0a}
+#v-tombola .gf-col-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+#v-tombola .gf-players{display:flex;flex-wrap:wrap;gap:8px}
+#v-tombola .gf-player{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.4);padding:7px 12px;border-radius:999px;font-size:13px}
+#v-tombola .gf-player.alive{background:#059669;color:#fff;border-color:rgba(16,185,129,.7)}
+#v-tombola .gf-summary{margin:12px 0 8px;color:#ffb703;font-size:13px}
+#v-tombola .gf-prizeform{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:6px}
+#v-tombola .gf-prizewins{margin-top:12px}
+@media(max-width:800px){
+  #v-tombola .half{grid-column:span 12}
+  #v-tombola .formgrid,#v-tombola .formgrid4{grid-template-columns:1fr 1fr}
+  #v-tombola .stats{grid-template-columns:repeat(2,1fr)}
+  #v-tombola .gf-prizeform{grid-template-columns:1fr}
+}
+/* Animation de tirage (overlay) */
+.loto-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:lotoFadeIn .25s ease;font-family:'Plus Jakarta Sans',sans-serif}
+@keyframes lotoFadeIn{from{opacity:0}to{opacity:1}}
+.loto-overlay .hidden{display:none!important}
+.loto-modal{background:linear-gradient(180deg,#262626,#000);border:1px solid rgba(255,183,3,.45);border-radius:20px;padding:28px 30px 30px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.7),0 0 40px rgba(74,163,255,.12);text-align:center;position:relative;overflow:hidden;color:#ffb703}
+.loto-modal h2{margin:0 0 6px;font-size:22px;font-weight:900;color:#ffb703;letter-spacing:.3px}
+.loto-modal .loto-sub{color:#ffcf5c;font-size:14px;margin-bottom:22px}
+.loto-drum{position:relative;height:120px;margin:0 auto 18px;max-width:300px;border-radius:16px;background:#0a0a0a;border:2px solid rgba(74,163,255,.5);box-shadow:inset 0 0 30px rgba(0,0,0,.6),0 0 24px rgba(74,163,255,.18);overflow:hidden}
+.loto-drum:after,.loto-drum:before{content:"";position:absolute;left:0;right:0;height:28px;z-index:2;pointer-events:none}
+.loto-drum:before{top:0;background:linear-gradient(180deg,#0a0a0a,transparent)}
+.loto-drum:after{bottom:0;background:linear-gradient(0deg,#0a0a0a,transparent)}
+.loto-reel{display:flex;flex-direction:column;align-items:center}
+.loto-num{font-size:48px;font-weight:900;line-height:120px;height:120px;color:#ffb703;text-shadow:0 0 18px rgba(255,183,3,.4);font-variant-numeric:tabular-nums;letter-spacing:2px}
+.loto-num.spinning{animation:lotoPulse .15s ease infinite alternate}
+@keyframes lotoPulse{from{opacity:.7;transform:scale(.98)}to{opacity:1;transform:scale(1.02)}}
+.loto-num.winner-flash{animation:lotoWin .6s ease;color:#fff;text-shadow:0 0 28px rgba(74,163,255,.8),0 0 12px rgba(255,183,3,.8)}
+@keyframes lotoWin{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.loto-balls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:52px;margin-top:8px}
+.loto-ball{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;background:radial-gradient(circle at 30% 28%,#fff1c2,#ffb703 55%,#7a4a00);color:#1a1000;box-shadow:0 4px 14px rgba(0,0,0,.5);animation:lotoBallIn .4s ease}
+@keyframes lotoBallIn{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.loto-reveal{margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,183,3,.3);min-height:56px}
+.loto-reveal strong{display:block;color:#ffb703;font-size:17px}
+.loto-reveal small{color:#ffcf5c}
+.loto-actions{margin-top:20px}
+.loto-actions button{min-width:140px;border:0;border-radius:10px;padding:10px 16px;font-weight:800;font-size:14px;cursor:pointer;background:#4aa3ff;color:#000}
+.loto-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.loto-confetti i{position:absolute;width:8px;height:8px;border-radius:2px;opacity:0;animation:lotoConf 1.2s ease-out forwards}
+@keyframes lotoConf{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(120px) rotate(360deg)}}
+</style>
 </head>
 <body class="antialiased selection:bg-brand-500 selection:text-black">
 
@@ -566,6 +702,125 @@ input,select,textarea{color:#ffb703!important}
   <div id="liste" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 </div>
 <div id="v-other" class="hidden"></div>
+<div id="v-tombola" class="hidden">
+<h2>Tombola</h2>
+<p class="tb-sub">Tickets, participants, lots et tirages aléatoires — lecture de la carte d’identité par OCR. <span id="tbStatus"></span></p>
+<nav class="tabs">
+  <button type="button" id="tabBtn-tombola" class="tab active" onclick="TB.tab('tombola')">Tombola</button>
+  <button type="button" id="tabBtn-gunfight" class="tab" onclick="TB.tab('gunfight')">Gunfight Tombola</button>
+</nav>
+<div id="tab-tombola">
+<div class="grid">
+  <section class="card half">
+    <h2>Configuration</h2>
+    <div class="formgrid">
+      <div><label for="ticketPrice">Prix du ticket ($)</label><input id="ticketPrice" type="number" min="0" step="0.01" value="5"></div>
+      <div><label for="drawCount">Nombre de tirages</label><input id="drawCount" type="number" min="1" value="2"></div>
+      <div><label for="winnersPerDraw">Gagnants par tirage</label><input id="winnersPerDraw" type="number" min="1" value="1"></div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="TB.applyDrawConfig()">Mettre à jour les tirages</button>
+      <button class="danger" onclick="TB.resetAll()">Nouvelle tombola</button>
+    </div>
+    <div class="notice">Les numéros de tickets sont uniques et attribués de façon aléatoire (non séquentiels). Si un participant rachète des tickets (même prénom et nom), les nouveaux numéros s’ajoutent avec un tiret séparateur. Lorsqu’un participant gagne, tous ses numéros sont retirés du pool. Tu peux nommer chaque tirage selon le lot.</div>
+  </section>
+
+  <section class="card half">
+    <h2>Ajouter un participant</h2>
+    <div class="idzone" id="idZone" tabindex="0">
+      <input type="file" id="idFile" accept="image/*">
+      <div id="idDrop">🪪 <b>Collez (Ctrl+V)</b> la carte d'identité, ou cliquez / glissez une image<br><small>Le nom, le prénom et l'ID sont lus automatiquement</small></div>
+      <img id="idPreview" alt="Carte d'identité">
+    </div>
+    <div class="idstatus" id="idStatus"></div>
+    <div class="formgrid4">
+      <div><label for="firstName">Prénom</label><input id="firstName" placeholder="Jean" oninput="TB.checkExisting()"></div>
+      <div><label for="lastName">Nom</label><input id="lastName" placeholder="Dupont" oninput="TB.checkExisting()"></div>
+      <div><label for="idCard">ID de carte</label><input id="idCard" placeholder="SAN-XXXXX" oninput="TB.checkExisting()"></div>
+      <div><label for="ticketQty">Tickets à acheter</label><input id="ticketQty" type="number" min="1" value="1"></div>
+    </div>
+    <div class="idhint" id="idHint"></div>
+    <div class="actions">
+      <button class="primary" id="addBtn" onclick="TB.addParticipant()">Ajouter les tickets</button>
+      <button class="secondary" onclick="TB.clearIdForm()">Effacer</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="stats">
+      <div class="stat"><b id="participantCount">0</b><span>Participants</span></div>
+      <div class="stat"><b id="ticketCount">0</b><span>Tickets vendus</span></div>
+      <div class="stat"><b id="revenue">0 $</b><span>Recette totale</span></div>
+      <div class="stat"><b id="remainingCount">0</b><span>Tickets encore éligibles</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Participants</h2>
+    <div id="participantsTable"></div>
+  </section>
+
+  <section class="card">
+    <h2>Tirages</h2>
+    <div id="draws"></div>
+    <div class="actions">
+      <button id="drawNextBtn" class="success" onclick="TB.drawNext()">🎲 Effectuer le prochain tirage</button>
+      <button id="undoBtn" class="secondary" onclick="TB.undoLastDraw()">↩️ Annuler le dernier tirage</button>
+    </div>
+  </section>
+</div>
+</div>
+
+<div id="tab-gunfight" class="hidden">
+<div class="grid">
+  <section class="card">
+    <div class="stats">
+      <div class="stat"><b id="gfStatTeams">0</b><span>Équipes</span></div>
+      <div class="stat"><b id="gfStatPlayers">0</b><span>Joueurs inscrits</span></div>
+      <div class="stat"><b id="gfStatMatches">0</b><span>Matchs</span></div>
+      <div class="stat"><b id="gfStatPrizes">0</b><span>Prix tirés au sort</span></div>
+    </div>
+  </section>
+
+  <section class="card half">
+    <h2>Créer une équipe</h2>
+    <div class="formgrid" style="grid-template-columns:2fr 1fr">
+      <div><label for="gfTeamName">Nom de l'équipe</label><input id="gfTeamName" placeholder="Ex. : Les Bleus" onkeydown="if(event.key==='Enter')TB.gfAddTeam()"></div>
+      <div><label for="gfTeamColor">Couleur</label><select id="gfTeamColor"></select></div>
+    </div>
+    <div class="actions"><button class="primary" onclick="TB.gfAddTeam()">Créer l'équipe</button></div>
+  </section>
+
+  <section class="card half">
+    <h2>Ajouter des joueurs</h2>
+    <label for="gfPlayerTeam">Équipe</label>
+    <select id="gfPlayerTeam"></select>
+    <label for="gfPlayerNames" style="margin-top:10px">Joueurs (un par ligne ou séparés par une virgule)</label>
+    <textarea id="gfPlayerNames" rows="3" placeholder="Jean Dupont&#10;Maria Lopez"></textarea>
+    <div class="actions"><button class="primary" onclick="TB.gfAddPlayers()">Ajouter à l'équipe</button></div>
+  </section>
+
+  <section class="card">
+    <h2>Équipes</h2>
+    <div id="gfTeams"></div>
+  </section>
+
+  <section class="card">
+    <h2>Créer un match</h2>
+    <label for="gfMatchName">Nom du match (facultatif)</label>
+    <input id="gfMatchName" placeholder="Ex. : Finale, Match 1…">
+    <label style="margin-top:12px">Équipes qui s'affrontent (2 ou plus)</label>
+    <div id="gfMatchTeams" class="gf-checks"></div>
+    <div class="actions"><button class="primary" onclick="TB.gfCreateMatch()">Créer le match</button></div>
+  </section>
+
+  <section class="card">
+    <h2>Matchs</h2>
+    <div id="gfMatches"></div>
+  </section>
+</div>
+</div>
+</div>
 </main>
 
 <div id="toast" class="fixed left-1/2 bottom-6 -translate-x-1/2 translate-y-12 bg-dark-800 border border-brand-500/40 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-3">
@@ -945,7 +1200,7 @@ function showGuest() {
     keep();
     view = 'cal';
     $('v-team').classList.add('hidden');
-    $('v-other').classList.remove('hidden');
+    $('v-other').classList.remove('hidden'); $('v-tombola').classList.add('hidden');
     drawSide(); drawView(); window.scrollTo(0, 0);
     if (window.LSPS_FB) window.LSPS_FB.connect(function(arr){
       var cf = arr.filter(function(x){ return x._cfg && x.id === '__portail'; })[0];
@@ -1706,6 +1961,7 @@ var NAV=[['dash','Tableau de bord','<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-
 ['facture','Facture','<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'],
 ['contrats','Contrats','<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/>'],
 ['inc','Main courante','<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>'],
+['tombola','Tombola','<path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v2M14 11v2M14 16v2"/>'],
 ['comptes','Comptes','<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>']];
 var ID_IC='<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.6 1.8-2.4 3-2.4s2.4.8 3 2.4M14.5 10h4M14.5 13.5h3"/>';
 var view='team',wk=null,P=null;
@@ -1807,11 +2063,12 @@ function drawSide(){
     return true;
   }).map(function(n){return '<button type="button" class="sb'+(view===n[0]?' on':'')+'" data-nav="'+n[0]+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+n[2]+'</svg><span>'+n[1]+'</span></button>';}).join('');
 }
-function nav(v){if(GUEST)v='cal';if(v==='comptes'&&!(CURRENT_USER&&CURRENT_USER.role==='admin'))v='team';view=v;$('v-team').classList.toggle('hidden',v!=='team');$('v-other').classList.toggle('hidden',v==='team');drawSide();if(v==='team')render();else drawView();window.scrollTo(0,0);}
+function nav(v){if(GUEST)v='cal';if(v==='comptes'&&!(CURRENT_USER&&CURRENT_USER.role==='admin'))v='team';view=v;$('v-team').classList.toggle('hidden',v!=='team');$('v-other').classList.toggle('hidden',v==='team'||v==='tombola');$('v-tombola').classList.toggle('hidden',v!=='tombola');drawSide();if(v==='team')render();else if(v==='tombola'){if(window.TB)TB.open();}else drawView();window.scrollTo(0,0);}
 var _rq;function scheduleRender(){clearTimeout(_rq);_rq=setTimeout(renderAll,120);}
 function renderAll(){drawFreq();drawSide();render();if(view!=='team')drawView();}
 var TT={cal:['Calendrier',function(){return GUEST?'Touchez une soirée pour ouvrir son affiche et voir les détails.':'Touchez un jour pour ajouter ou modifier une soirée ; les invités verront l’affiche et les détails.';}],dash:['Tableau de bord',function(){return new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}],plan:['Planning','Qui travaille quand ; le pack de la soirée et les salaires sont automatiques'],clock:['Pointage','Arrivées et validation de fin de pointage'],soiree:['Soirée','Thème, affiche, agents, incidents et dépenses de salaires d’une soirée'],contrats:['Contrats','Créer, signer et imprimer les contrats des agents'],compta:['Comptabilité','Dépenses de salaires et feuilles de paie par jour, semaine ou mois'],facture:['Facture','Facture d’une soirée : pack, tarif et total à régler'],inc:['Main courante','Rapports d’incident : ce qui s’est passé et ce qui reste à traiter'],comptes:['Comptes staff','Créer et gérer les identifiants d’accès au portail (admin uniquement)']};
 function drawView(){
+  if(view==='tombola')return;
   var t=TT[view],s=typeof t[1]==='function'?t[1]():t[1],f={cal:vCal,dash:vDash,plan:vPlan,clock:vClock,compta:vCompta,soiree:vSoiree,facture:vFacture,contrats:vContrats,inc:vInc,comptes:vComptes}[view];
   var sc=document.querySelector('#v-other .tscroll'),sl=sc?sc.scrollLeft:0;
   $('v-other').innerHTML='<h2 class="text-2xl font-black text-white tracking-tight">'+t[0]+'</h2><p class="text-slate-400 text-sm mb-5">'+s+'</p>'+f();
@@ -2747,6 +3004,1181 @@ render();
 
 
 
+<script>
+/* ===== TOMBOLA — module isolé (Firebase Firestore propre à la tombola, OCR carte d'identité) ===== */
+(function(){
+'use strict';
+// ========== CONFIGURATION FIREBASE ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyDTu5DPqTaMZsj3z6KcsTPTS67bLo6z53k",
+  authDomain: "tombola-dynasty-alamo.firebaseapp.com",
+  projectId: "tombola-dynasty-alamo",
+  storageBucket: "tombola-dynasty-alamo.firebasestorage.app",
+  messagingSenderId: "50581731883",
+  appId: "1:50581731883:web:b016e492b299575840c86e"
+};
+
+let db, docRef, gfDocRef;
+
+// ========== ÉTAT ==========
+let state = {
+  ticketPrice: 5,
+  participants: [],
+  draws: [],
+  currentDraw: 0,
+  drawnTickets: []
+};
+
+let isSaving = false;          // évite les boucles
+let isInitialLoad = true;
+let unsubscribe = null;
+let isTypingLotName = false;   // empêche le re-render pendant la saisie
+let lotNameTimers = {};        // debounce par tirage
+
+const $ = id => document.getElementById(id);
+const money = n => Number(n).toLocaleString('fr-FR',{style:'currency',currency:'USD'});
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+// ========== SAUVEGARDE / CHARGEMENT FIREBASE ==========
+async function save() {
+  if (isSaving) return;
+  isSaving = true;
+  try {
+    await docRef.set({
+      ticketPrice: state.ticketPrice,
+      participants: state.participants,
+      draws: state.draws,
+      currentDraw: state.currentDraw,
+      drawnTickets: state.drawnTickets,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Erreur sauvegarde Firebase:', err);
+    alert('Erreur de connexion. Vérifie ta connexion internet ou les règles Firestore.');
+  } finally {
+    isSaving = false;
+  }
+}
+
+function startRealtime() {
+  unsubscribe = docRef.onSnapshot(
+    (snap) => {
+      if (!snap.exists) {
+        // Premier lancement : créer le document
+        if (isInitialLoad) {
+          applyDrawConfig(false);
+          save();
+        }
+        isInitialLoad = false;
+        return;
+      }
+      const data = snap.data();
+      // Ne pas écraser si on est en train de sauvegarder
+      if (isSaving) return;
+
+      state = {
+        ticketPrice: data.ticketPrice ?? 5,
+        participants: data.participants || [],
+        draws: data.draws || [],
+        currentDraw: data.currentDraw || 0,
+        drawnTickets: data.drawnTickets || []
+      };
+
+      // Mettre à jour les champs de config sans perdre le focus si possible
+      if (document.activeElement?.id !== 'ticketPrice') {
+        $('ticketPrice').value = state.ticketPrice;
+      }
+      if (document.activeElement?.id !== 'drawCount') {
+        $('drawCount').value = state.draws.length || 1;
+      }
+      if (document.activeElement?.id !== 'winnersPerDraw') {
+        $('winnersPerDraw').value = state.draws[0]?.winnersCount || 1;
+      }
+
+      // Ne pas re-render si l'utilisateur est en train de taper un nom de lot
+      if (!isTypingLotName) {
+        render();
+      }
+      isInitialLoad = false;
+    },
+    (err) => {
+      console.error('Erreur écoute Firestore:', err);
+      alert('Impossible de se connecter à la base de données. Vérifie que Firestore est bien activé en mode test.');
+    }
+  );
+}
+
+// ========== LOGIQUE MÉTIER (identique à l’original) ==========
+function applyDrawConfig(saveIt = true) {
+  const count = Math.max(1, parseInt($('drawCount').value) || 1);
+  const winners = Math.max(1, parseInt($('winnersPerDraw').value) || 1);
+  const old = state.draws || [];
+  state.draws = Array.from({ length: count }, (_, i) => ({
+    number: i + 1,
+    name: old[i]?.name ?? '',
+    winnersCount: old[i]?.winnersCount ?? winners,
+    winners: old[i]?.winners ?? []
+  }));
+  state.currentDraw = Math.min(state.currentDraw || 0, count);
+  state.ticketPrice = Math.max(0, parseFloat($('ticketPrice').value) || 0);
+  if (saveIt) save();
+  render();
+}
+
+function drawTitle(d) {
+  const custom = (d.name || '').trim();
+  return custom || ('Tirage ' + d.number);
+}
+
+function updateDrawName(index, value) {
+  if (!state.draws[index]) return;
+  isTypingLotName = true;
+  state.draws[index].name = value;
+
+  // Mise à jour visuelle immédiate du titre
+  const titleEl = document.querySelector('#draw-title-' + index);
+  if (titleEl) {
+    const done = state.draws[index].winners.length > 0;
+    titleEl.textContent = (done ? '✅ ' : '🎁 ') + drawTitle(state.draws[index]);
+  }
+
+  // Debounce : on n'enregistre qu'après 600ms sans frappe
+  clearTimeout(lotNameTimers[index]);
+  lotNameTimers[index] = setTimeout(() => {
+    save().finally(() => {
+      setTimeout(() => { isTypingLotName = false; }, 300);
+    });
+  }, 600);
+}
+
+function generateRandomTickets(qty) {
+  const used = new Set(allTickets());
+  const tickets = [];
+  const maxAttempts = qty * 1000;
+  let attempts = 0;
+  while (tickets.length < qty && attempts < maxAttempts) {
+    attempts++;
+    const n = Math.floor(Math.random() * 99999) + 1;
+    if (!used.has(n)) {
+      used.add(n);
+      tickets.push(n);
+    }
+  }
+  if (tickets.length < qty) {
+    alert('Impossible de générer assez de numéros uniques. Réduisez le nombre de tickets.');
+    return null;
+  }
+  return tickets;
+}
+
+function ensureBatches(p) {
+  if (!p.batches || !Array.isArray(p.batches) || !p.batches.length) {
+    // Firestore n'accepte pas les tableaux imbriqués → on stocke des objets
+    p.batches = p.tickets?.length ? [{ tickets: p.tickets.slice() }] : [];
+  }
+  // Migration : si d'anciens batches sont encore des tableaux purs, on les convertit
+  p.batches = p.batches.map(b => Array.isArray(b) ? { tickets: b } : b);
+  return p;
+}
+
+function formatTicketBatches(p) {
+  ensureBatches(p);
+  if (!p.batches.length) return '';
+  return p.batches
+    .map(batch => (batch.tickets || batch).map(t => `<span class="badge">#${t}</span>`).join(' '))
+    .join('<span class="batch-sep">—</span>');
+}
+
+const normName = s => String(s||'').trim().toLowerCase();
+
+function findExisting(prenom, nom, idCard) {
+  // Même personne = même prénom + même nom (l'ID seul ne suffit plus)
+  if (!prenom || !nom) return null;
+  return state.participants.find(p => normName(p.nom) === normName(nom) && normName(p.prenom) === normName(prenom));
+}
+
+function checkExisting() {
+  const prenom = $('firstName').value.trim(), nom = $('lastName').value.trim(), id = $('idCard').value.trim();
+  const hint = $('idHint');
+  const ex = findExisting(prenom, nom, id);
+  let html = '';
+  if (ex) {
+    hint.className = 'idhint';
+    html = `✅ <b>${esc(ex.prenom)} ${esc(ex.nom)}</b> a déjà <b>${ex.tickets.length}</b> ticket(s) — les nouveaux tickets seront <b>ajoutés</b> à cette personne.`;
+    $('addBtn').textContent = 'Ajouter des tickets à cette personne';
+  } else {
+    hint.className = 'idhint new';
+    html = (prenom && nom) ? `🆕 Nouveau participant : <b>${esc(prenom)} ${esc(nom)}</b>.` : '';
+    $('addBtn').textContent = 'Ajouter les tickets';
+  }
+  hint.innerHTML = html;
+  hint.style.display = html ? 'block' : 'none';
+}
+
+function clearIdForm() {
+  $('lastName').value = ''; $('firstName').value = ''; $('idCard').value = ''; $('ticketQty').value = 1;
+  $('idPreview').style.display = 'none'; $('idPreview').src = '';
+  $('idDrop').style.display = ''; $('idStatus').className = 'idstatus'; $('idHint').style.display = 'none';
+  $('addBtn').textContent = 'Ajouter les tickets';
+}
+
+function addTicketsTo(existing, qty) {
+  const tickets = generateRandomTickets(qty);
+  if (!tickets) return false;
+  ensureBatches(existing);
+  existing.tickets.push(...tickets);
+  existing.batches.push({ tickets: tickets });
+  return true;
+}
+
+function addParticipant() {
+  const nom = $('lastName').value.trim(),
+    prenom = $('firstName').value.trim(),
+    idCard = $('idCard').value.trim().toUpperCase();
+  const qty = Math.max(1, parseInt($('ticketQty').value) || 0);
+  if (!nom || !prenom) {
+    alert('Merci de renseigner le nom et le prénom.');
+    return;
+  }
+  if (state.currentDraw > 0) {
+    alert('Impossible d’ajouter des tickets après le début des tirages. Annule d’abord les tirages.');
+    return;
+  }
+  const existing = findExisting(prenom, nom, idCard);
+  if (existing) {
+    if (!addTicketsTo(existing, qty)) return;
+    if (idCard && !existing.idCard) existing.idCard = idCard;
+  } else {
+    const p = { id: Date.now() + Math.random(), nom, prenom, idCard, tickets: [], batches: [] };
+    if (!addTicketsTo(p, qty)) return;
+    state.participants.push(p);
+  }
+  clearIdForm();
+  save();
+  render();
+}
+
+function addMore(id) {
+  if (state.currentDraw > 0) {
+    alert('Impossible d’ajouter des tickets après le début des tirages. Annule d’abord les tirages.');
+    return;
+  }
+  const p = state.participants.find(x => x.id === id);
+  const inp = document.getElementById('more-' + String(id).replace('.', '_'));
+  const qty = Math.max(1, parseInt(inp && inp.value) || 1);
+  if (!p || !addTicketsTo(p, qty)) return;
+  save();
+  render();
+}
+
+// ========== CARTE D'IDENTITÉ (collage + OCR) ==========
+const idZone = $('idZone');
+function handleIdImage(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    $('idPreview').src = e.target.result;
+    $('idPreview').style.display = 'block';
+    $('idDrop').style.display = 'none';
+    runIdOCR(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+$('idFile').addEventListener('change', () => { if ($('idFile').files[0]) handleIdImage($('idFile').files[0]); $('idFile').value = ''; });
+idZone.addEventListener('dragover', e => { e.preventDefault(); idZone.classList.add('dragover'); });
+idZone.addEventListener('dragleave', () => idZone.classList.remove('dragover'));
+idZone.addEventListener('drop', e => { e.preventDefault(); idZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleIdImage(e.dataTransfer.files[0]); });
+document.addEventListener('paste', e => {
+  if ($('v-tombola').classList.contains('hidden') || $('tab-tombola').classList.contains('hidden')) return;
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) { e.preventDefault(); handleIdImage(item.getAsFile()); break; }
+  }
+});
+
+async function runIdOCR(dataUrl) {
+  const st = $('idStatus');
+  st.className = 'idstatus loading'; st.textContent = 'Analyse de la carte en cours…';
+  try {
+    if (typeof Tesseract === 'undefined') await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    if (typeof Tesseract === 'undefined') throw new Error('module OCR non chargé');
+    const result = await Tesseract.recognize(dataUrl, 'fra+eng', {
+      logger: m => { if (m.status === 'recognizing text' && m.progress != null) st.textContent = 'Reconnaissance… ' + Math.round(m.progress * 100) + '%'; }
+    });
+    const x = extractFields(result.data.text || '');
+    if (x.prenom) $('firstName').value = x.prenom;
+    if (x.nom) $('lastName').value = x.nom;
+    if (x.id) $('idCard').value = x.id;
+    st.className = 'idstatus done';
+    st.textContent = (x.prenom || x.nom || x.id) ? '✓ Carte lue — vérifie les champs puis indique le nombre de tickets.' : '⚠ Rien de lisible : saisis les champs à la main.';
+    checkExisting();
+    $('ticketQty').focus(); $('ticketQty').select();
+  } catch (err) {
+    console.error(err);
+    st.className = 'idstatus error'; st.textContent = '✗ Erreur OCR : ' + (err.message || 'échec');
+  }
+}
+
+function extractFields(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let prenom = '', nom = '', id = '';
+
+  // ── ID de carte (format SAN-18427 etc.) ──
+  const idMatch = text.match(/\b([A-Z]{2,4}[-‐–—]?\s*\d{4,6})\b/i);
+  if (idMatch) id = idMatch[1].replace(/[\s‐–—]/g, '-').toUpperCase();
+
+  // Mots à ignorer (libellés, genres, titres)
+  const isLabel = (s) => /^(pr[eé]nom|nom(\s+de\s+famille)?|genre|id(\s+de)?(\s+carte)?|date(\s+de)?(\s+naissance)?|carte(\s+d['']identit[eé])?|homme|femme|autre|signature)\s*:?\s*$/i.test(s.trim());
+  const isJunk = (s) => !s || s.length < 2 || isLabel(s) || /^\d{1,2}[\/\-.]\d{1,2}/.test(s) || /^[\d\s]+$/.test(s) || /barcode|code.?bar/i.test(s);
+
+  // ═══════════════════════════════════════
+  // Stratégie 1 : libellés côte à côte sur une ligne
+  // "PRÉNOM : NOM DE FAMILLE :" → valeurs sur la ligne suivante
+  // ═══════════════════════════════════════
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Ligne qui contient à la fois PRÉNOM et NOM
+    if (/PR[EÉ]NOM/i.test(line) && /NOM\s*(DE\s*FAMILLE)?/i.test(line)) {
+      // Valeurs sur la même ligne après les deux-points ?
+      // Ex: "PRÉNOM : Ragnar NOM DE FAMILLE : Wolfman"
+      const sameLine = line.match(/PR[EÉ]NOM\s*:?\s*([A-Za-zÀ-ÿ' -]+?)\s+NOM\s*(DE\s*FAMILLE)?\s*:?\s*([A-Za-zÀ-ÿ' -]+)/i);
+      if (sameLine && sameLine[1] && sameLine[3] && !isJunk(sameLine[1]) && !isJunk(sameLine[3])) {
+        prenom = sameLine[1].trim();
+        nom = sameLine[3].trim();
+        break;
+      }
+      // Sinon → ligne suivante = "ValeurPrénom  ValeurNom"
+      const next = lines[i + 1];
+      if (next && !/GENRE|ID\s*DE|DATE/i.test(next)) {
+        // Séparer en 2 parties (souvent séparées par 2+ espaces ou tab)
+        const parts = next.split(/\s{2,}|\t+/).map(p => p.trim()).filter(p => p && !isJunk(p));
+        if (parts.length >= 2) {
+          prenom = parts[0];
+          nom = parts.slice(1).join(' ');
+          break;
+        }
+        // Sinon : premier mot = prénom, reste = nom
+        const words = next.split(/\s+/).filter(w => w && !isJunk(w));
+        if (words.length >= 2) {
+          prenom = words[0];
+          nom = words.slice(1).join(' ');
+          break;
+        }
+        if (words.length === 1) prenom = words[0];
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // Stratégie 2 : libellés séparés, valeur juste en dessous
+  // ═══════════════════════════════════════
+  if (!prenom || !nom) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // PRÉNOM seul
+      if (!prenom && /PR[EÉ]NOM\s*:/i.test(line) && !/NOM\s*(DE\s*FAMILLE)/i.test(line)) {
+        const after = line.replace(/^.*?PR[EÉ]NOM\s*:?\s*/i, '').trim();
+        // Ne pas prendre un autre libellé
+        if (after && !isJunk(after) && !/NOM|GENRE|ID|DATE/i.test(after)) {
+          prenom = after;
+        } else if (lines[i + 1] && !isJunk(lines[i + 1]) && !/NOM|GENRE|ID|DATE|CARTE/i.test(lines[i + 1])) {
+          prenom = lines[i + 1];
+        }
+      }
+
+      // NOM DE FAMILLE seul
+      if (!nom && /NOM\s*(DE\s*FAMILLE)?\s*:/i.test(line) && !/PR[EÉ]NOM/i.test(line)) {
+        const after = line.replace(/^.*?NOM\s*(DE\s*FAMILLE)?\s*:?\s*/i, '').trim();
+        if (after && !isJunk(after) && !/GENRE|ID|DATE|PR[EÉ]NOM/i.test(after)) {
+          nom = after;
+        } else if (lines[i + 1] && !isJunk(lines[i + 1]) && !/GENRE|ID|DATE|CARTE|PR[EÉ]NOM/i.test(lines[i + 1])) {
+          nom = lines[i + 1];
+        }
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // Stratégie 3 : regex globale sur tout le texte
+  // ═══════════════════════════════════════
+  if (!prenom) {
+    const m = text.match(/PR[EÉ]NOM\s*:?\s*\n?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]{1,25})/i);
+    if (m && !isJunk(m[1])) prenom = m[1].trim();
+  }
+  if (!nom) {
+    const m = text.match(/NOM\s*(DE\s*FAMILLE)?\s*:?\s*\n?\s*([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]{1,30})/i);
+    if (m && !isJunk(m[2])) nom = m[2].trim();
+  }
+
+  // ═══════════════════════════════════════
+  // Stratégie 4 : fallback — candidats hors libellés
+  // ═══════════════════════════════════════
+  if (!prenom || !nom) {
+    const skip = /carte|identit|pr[eé]nom|nom|genre|id\s*de|date|naissance|signature|barcode|code|homme|femme|san[-‐]/i;
+    const candidates = lines.filter(l =>
+      l.length >= 2 && l.length < 35 &&
+      !skip.test(l) &&
+      !/^\d+$/.test(l) &&
+      !/^\d{1,2}[\/\-.]\d/.test(l) &&
+      /[A-Za-zÀ-ÿ]{2,}/.test(l)
+    );
+    // Éviter de reprendre un ID ou un genre
+    const clean = candidates.filter(c => !/^(homme|femme|autre)$/i.test(c) && !/^[A-Z]{2,4}-?\d+$/i.test(c));
+    if (!prenom && clean[0]) prenom = clean[0];
+    if (!nom && clean[1]) nom = clean[1];
+    // Si une seule ligne "Ragnar Wolfman"
+    if ((!prenom || !nom) && clean[0]) {
+      const words = clean[0].split(/\s+/);
+      if (words.length >= 2) {
+        if (!prenom) prenom = words[0];
+        if (!nom) nom = words.slice(1).join(' ');
+      }
+    }
+  }
+
+  // Nettoyage final : retirer les libellés qui auraient fuité
+  prenom = cleanName(prenom);
+  nom = cleanName(nom);
+  // Si le "prénom" est en fait un libellé, on le jette
+  if (isLabel(prenom) || /^(nom|genre|id|date|homme|femme)/i.test(prenom)) prenom = '';
+  if (isLabel(nom) || /^(genre|id|date|homme|femme|pr[eé]nom)/i.test(nom)) nom = '';
+
+  return { prenom, nom, id };
+}
+
+function cleanName(s) {
+  if (!s) return '';
+  return s
+    .replace(/[:|•·]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^[^\p{L}]+/gu, '')
+    .replace(/[^\p{L}\s'-]+$/gu, '')
+    .trim();
+}
+
+
+function allTickets() {
+  return state.participants.flatMap(p => p.tickets);
+}
+
+function eligibleTickets() {
+  const used = new Set(state.drawnTickets);
+  return allTickets().filter(n => !used.has(n));
+}
+
+function ownerOf(ticket) {
+  return state.participants.find(p => p.tickets.includes(ticket));
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function createLotoOverlay(title) {
+  const el = document.createElement('div');
+  el.className = 'loto-overlay';
+  el.id = 'lotoOverlay';
+  el.innerHTML = `<div class="loto-modal">
+    <div class="loto-confetti" id="lotoConfetti"></div>
+    <h2>🎱 ${esc(title)}</h2>
+    <div class="loto-sub" id="lotoSub">Mélange des tickets…</div>
+    <div class="loto-drum"><div class="loto-reel" id="lotoReel"><div class="loto-num" id="lotoNum">—</div></div></div>
+    <div class="loto-balls" id="lotoBalls"></div>
+    <div class="loto-reveal" id="lotoReveal"><strong>Préparation du tirage…</strong><small>Les numéros défilent comme au loto</small></div>
+    <div class="loto-actions hidden" id="lotoActions"><button class="primary" id="lotoCloseBtn">Continuer</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  return el;
+}
+
+function spawnConfetti() {
+  const box = $('lotoConfetti');
+  if (!box) return;
+  const colors = ['#e8b84b', '#ff1994', '#ffe8a4', '#25d39b', '#ff7bc3'];
+  for (let i = 0; i < 28; i++) {
+    const d = document.createElement('i');
+    d.style.left = 10 + Math.random() * 80 + '%';
+    d.style.top = 20 + Math.random() * 40 + '%';
+    d.style.background = colors[i % colors.length];
+    d.style.animationDelay = Math.random() * 0.4 + 's';
+    box.appendChild(d);
+  }
+}
+
+async function animateSpin(pool, finalTicket) {
+  const numEl = $('lotoNum');
+  numEl.classList.add('spinning');
+  const duration = 2200 + Math.random() * 800;
+  const start = performance.now();
+  let last = -1;
+  while (performance.now() - start < duration) {
+    const t = (performance.now() - start) / duration;
+    const interval = 40 + t * t * 180;
+    let n = pool[Math.floor(Math.random() * pool.length)];
+    if (n === last && pool.length > 1) n = pool[(pool.indexOf(n) + 1) % pool.length];
+    last = n;
+    numEl.textContent = '#' + n;
+    await sleep(interval);
+  }
+  numEl.classList.remove('spinning');
+  numEl.textContent = '#' + finalTicket;
+  numEl.classList.add('winner-flash');
+  await sleep(500);
+  numEl.classList.remove('winner-flash');
+}
+
+async function drawNext() {
+  if (state.currentDraw >= state.draws.length) {
+    alert('Tous les tirages ont déjà été effectués.');
+    return;
+  }
+  const draw = state.draws[state.currentDraw];
+  const pool = eligibleTickets();
+  if (pool.length < draw.winnersCount) {
+    alert(
+      `Pas assez de tickets éligibles pour « ${drawTitle(draw)} ». Il en reste ${pool.length}, mais ${draw.winnersCount} gagnant(s) sont demandés.`
+    );
+    return;
+  }
+
+  $('drawNextBtn').disabled = true;
+  $('undoBtn').disabled = true;
+
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const winners = shuffled.slice(0, draw.winnersCount).map(ticket => ({ ticket, ...ownerOf(ticket) }));
+
+  const overlay = createLotoOverlay(drawTitle(draw));
+  const balls = $('lotoBalls');
+  const reveal = $('lotoReveal');
+  const sub = $('lotoSub');
+
+  let animPool = [...pool];
+
+  for (let i = 0; i < winners.length; i++) {
+    const w = winners[i];
+    sub.textContent =
+      winners.length > 1 ? `Tirage du gagnant ${i + 1} sur ${winners.length}…` : 'Tirage du gagnant…';
+    reveal.innerHTML = `<strong>🎱 Roulement des numéros…</strong><small>Comme au loto</small>`;
+    await animateSpin(animPool, w.ticket);
+
+    const ball = document.createElement('div');
+    ball.className = 'loto-ball';
+    ball.textContent = '#' + w.ticket;
+    balls.appendChild(ball);
+
+    reveal.innerHTML = `<strong>🎉 #${w.ticket} — ${esc(w.prenom)} ${esc(w.nom)}</strong><small>Tous les tickets de ce participant sont retirés des prochains tirages.</small>`;
+    spawnConfetti();
+    const owner = ownerOf(w.ticket);
+    if (owner) {
+      const ban = new Set(owner.tickets);
+      animPool = animPool.filter(t => !ban.has(t));
+    } else {
+      animPool = animPool.filter(t => t !== w.ticket);
+    }
+    await sleep(900);
+  }
+
+  sub.textContent = 'Tirage terminé !';
+  $('lotoActions').classList.remove('hidden');
+
+  await new Promise(resolve => {
+    $('lotoCloseBtn').onclick = () => {
+      overlay.remove();
+      resolve();
+    };
+  });
+
+  draw.winners = winners;
+  const ownerIds = new Set();
+  for (const w of winners) {
+    const owner = ownerOf(w.ticket);
+    if (owner && !ownerIds.has(owner.id)) {
+      ownerIds.add(owner.id);
+      state.drawnTickets.push(...owner.tickets);
+    }
+  }
+  state.drawnTickets = [...new Set(state.drawnTickets)];
+  state.currentDraw++;
+  await save();
+  render();
+}
+
+function undoLastDraw() {
+  if (state.currentDraw <= 0) {
+    alert('Aucun tirage à annuler.');
+    return;
+  }
+  const draw = state.draws[state.currentDraw - 1];
+  const ticketsToRestore = new Set();
+  for (const w of draw.winners) {
+    const owner = ownerOf(w.ticket);
+    if (owner) owner.tickets.forEach(t => ticketsToRestore.add(t));
+    else ticketsToRestore.add(w.ticket);
+  }
+  draw.winners = [];
+  state.drawnTickets = state.drawnTickets.filter(t => !ticketsToRestore.has(t));
+  state.currentDraw--;
+  save();
+  render();
+}
+
+function removeParticipant(id) {
+  if (state.currentDraw > 0) {
+    alert('Impossible de supprimer un participant après le début des tirages. Annule d’abord les tirages.');
+    return;
+  }
+  state.participants = state.participants.filter(p => p.id !== id);
+  save();
+  render();
+}
+
+function resetAll() {
+  if (!confirm('Supprimer tous les participants, tickets et tirages pour commencer une nouvelle tombola ?')) return;
+  state = {
+    ticketPrice: parseFloat($('ticketPrice').value) || 5,
+    participants: [],
+    draws: [],
+    currentDraw: 0,
+    drawnTickets: []
+  };
+  $('drawCount').value = 2;
+  $('winnersPerDraw').value = 1;
+  applyDrawConfig(false);
+  save();
+  render();
+}
+
+function render() {
+  $('ticketPrice').value = state.ticketPrice;
+  $('drawCount').value = state.draws.length || 1;
+  $('winnersPerDraw').value = state.draws[0]?.winnersCount || 1;
+  const tickets = allTickets();
+  $('participantCount').textContent = state.participants.length;
+  $('ticketCount').textContent = tickets.length;
+  $('revenue').textContent = Number(tickets.length * state.ticketPrice).toLocaleString('fr-FR', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  $('remainingCount').textContent = eligibleTickets().length;
+
+  if (!state.participants.length) {
+    $('participantsTable').innerHTML = '<div class="empty">Aucun participant pour le moment.</div>';
+  } else {
+    $('participantsTable').innerHTML = `<div class="tablewrap"><table><thead><tr><th>Prénom</th><th>Nom</th><th>Tickets</th><th>Total</th><th>Ajouter</th><th></th></tr></thead><tbody>
+      ${state.participants
+        .map(
+          p =>
+            `<tr><td>${esc(p.prenom)}${p.idCard ? `<span class="idtag">🪪 ${esc(p.idCard)}</span>` : ''}</td><td>${esc(p.nom)}</td><td class="ticket-list">${formatTicketBatches(
+              p
+            )}</td><td>${money(p.tickets.length * state.ticketPrice)}</td><td><div class="addmore"><input id="more-${String(p.id).replace('.', '_')}" type="number" min="1" value="1"><button class="primary" onclick="TB.addMore(${p.id})">+ tickets</button></div></td><td><button class="danger" onclick="TB.removeParticipant(${
+              p.id
+            })">Supprimer</button></td></tr>`
+        )
+        .join('')}
+    </tbody></table></div>`;
+  }
+
+  if (!state.draws.length) {
+    $('draws').innerHTML = '<div class="empty">Configure le nombre de tirages.</div>';
+  } else {
+    $('draws').innerHTML =
+      '<div class="draws">' +
+      state.draws
+        .map((d, i) => {
+          const done = d.winners.length > 0;
+          return `<div class="draw ${done ? 'done' : ''}">
+      <h3 id="draw-title-${i}">${done ? '✅' : '🎁'} ${esc(drawTitle(d))}</h3>
+      <div class="lot-label">Lot / nom du tirage</div>
+      <input class="lot-name-input" type="text" placeholder="Ex. : Grand lot TV, Panier garni…" value="${esc(
+        d.name || ''
+      )}" oninput="TB.updateDrawName(${i}, this.value)" ${done ? 'disabled' : ''}>
+      <div class="draw-info">${d.winnersCount} gagnant(s)</div>
+      ${
+        done
+          ? d.winners
+              .map(
+                w =>
+                  `<div class="winner"><strong>🎉 #${w.ticket} — ${esc(w.prenom)} ${esc(
+                    w.nom
+                  )}</strong><small>Tous les tickets de ce participant sont retirés des prochains tirages.</small></div>`
+              )
+              .join('')
+          : '<div class="draw-info" style="margin-top:12px">En attente du tirage.</div>'
+      }
+    </div>`;
+        })
+        .join('') +
+      '</div>';
+  }
+
+  $('drawNextBtn').disabled = state.currentDraw >= state.draws.length || eligibleTickets().length === 0;
+  $('undoBtn').disabled = state.currentDraw === 0;
+}
+
+// ========== ONGLETS ==========
+function tab(name) {
+  ['tombola', 'gunfight'].forEach(t => {
+    $('tab-' + t).classList.toggle('hidden', t !== name);
+    $('tabBtn-' + t).classList.toggle('active', t === name);
+  });
+  try { localStorage.setItem('tombolaTab', name); } catch (e) {}
+  if (name === 'gunfight') gfRender();
+}
+
+// ========== GUNFIGHT TOMBOLA ==========
+const GF_COLORS = [
+  { e: '🔵', n: 'Bleue', h: '#3b82f6' },
+  { e: '🟡', n: 'Jaune', h: '#facc15' },
+  { e: '🔴', n: 'Rouge', h: '#ef4444' },
+  { e: '🟢', n: 'Verte', h: '#22c55e' },
+  { e: '🟣', n: 'Violette', h: '#a855f7' },
+  { e: '🟠', n: 'Orange', h: '#f97316' },
+  { e: '⚪', n: 'Blanche', h: '#f1f5f9' },
+  { e: '🟤', n: 'Marron', h: '#b7791f' }
+];
+let gf = { teams: [], matches: [] };
+let gfSel = [];          // équipes cochées pour le prochain match
+let gfDraft = {};        // saisies en cours (prix / nb gagnants) par match
+let gfBusy = false;
+let gfPending = false;
+const gfId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+async function gfSave() {
+  try {
+    await gfDocRef.set({
+      teams: gf.teams,
+      matches: gf.matches,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Erreur sauvegarde Gunfight:', err);
+    alert('Erreur de connexion. Vérifie ta connexion internet ou les règles Firestore.');
+  }
+}
+
+function startGF() {
+  gfDocRef.onSnapshot(
+    snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        gf = { teams: d.teams || [], matches: d.matches || [] };
+        gf.matches.forEach(m => { m.alive = m.alive || {}; m.draws = m.draws || []; });
+      }
+      if (gfTyping()) { gfPending = true; return; }
+      gfRender();
+    },
+    err => console.error('Erreur écoute Gunfight:', err)
+  );
+}
+
+function gfTyping() {
+  const a = document.activeElement;
+  return !!(a && a.tagName === 'INPUT' && a.closest && a.closest('#gfMatches'));
+}
+
+const gfTeam = id => gf.teams.find(t => t.id === id);
+const gfColorOf = t => (t && t.color) || '#e8b84b';
+const gfMatchTitle = m =>
+  (m.name || '').trim() ||
+  m.teamIds.map(id => gfTeam(id)?.name || '?').join(' ⚔️ ');
+
+function gfSurvivors(m) {
+  const out = [];
+  m.teamIds.forEach(tid => {
+    const t = gfTeam(tid);
+    if (!t) return;
+    t.players.forEach(p => {
+      if (m.alive[p.id]) out.push({ id: p.id, name: p.name, teamId: t.id, teamName: t.name, color: t.color });
+    });
+  });
+  return out;
+}
+
+function gfEligible(m) {
+  const won = new Set(m.draws.flatMap(d => d.winners.map(w => w.id)));
+  return gfSurvivors(m).filter(p => !won.has(p.id));
+}
+
+// ----- Équipes & joueurs -----
+function gfAddTeam() {
+  const idx = parseInt($('gfTeamColor').value) || 0;
+  const c = GF_COLORS[idx];
+  const name = $('gfTeamName').value.trim() || 'Équipe ' + c.n;
+  gf.teams.push({ id: gfId(), name, color: c.h, players: [] });
+  $('gfTeamName').value = '';
+  gfSave();
+  gfRender();
+}
+
+function gfAddPlayers() {
+  const tid = $('gfPlayerTeam').value;
+  const team = gfTeam(tid);
+  if (!team) { alert('Crée d’abord une équipe.'); return; }
+  const names = $('gfPlayerNames').value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+  if (!names.length) { alert('Saisis au moins un nom de joueur.'); return; }
+  const have = new Set(team.players.map(p => p.name.toLowerCase()));
+  names.forEach(n => {
+    if (have.has(n.toLowerCase())) return;
+    have.add(n.toLowerCase());
+    team.players.push({ id: gfId(), name: n });
+  });
+  $('gfPlayerNames').value = '';
+  gfSave();
+  gfRender();
+}
+
+function gfRemovePlayer(tid, pid) {
+  const t = gfTeam(tid);
+  if (!t) return;
+  t.players = t.players.filter(p => p.id !== pid);
+  gf.matches.forEach(m => { delete m.alive[pid]; });
+  gfSave();
+  gfRender();
+}
+
+function gfRemoveTeam(tid) {
+  if (gf.matches.some(m => m.teamIds.includes(tid))) {
+    alert('Cette équipe participe à un match. Supprime d’abord le match.');
+    return;
+  }
+  const t = gfTeam(tid);
+  if (t && t.players.length && !confirm(`Supprimer « ${t.name} » et ses ${t.players.length} joueur(s) ?`)) return;
+  gf.teams = gf.teams.filter(x => x.id !== tid);
+  gfSel = gfSel.filter(id => id !== tid);
+  gfSave();
+  gfRender();
+}
+
+// ----- Matchs -----
+function gfToggleSel(tid) {
+  gfSel = gfSel.includes(tid) ? gfSel.filter(x => x !== tid) : [...gfSel, tid];
+  gfRenderMatchTeams();
+}
+
+function gfCreateMatch() {
+  if (gfSel.length < 2) { alert('Sélectionne au moins 2 équipes pour créer un match.'); return; }
+  gf.matches.push({
+    id: gfId(),
+    name: $('gfMatchName').value.trim(),
+    teamIds: [...gfSel],
+    alive: {},
+    draws: []
+  });
+  gfSel = [];
+  $('gfMatchName').value = '';
+  gfSave();
+  gfRender();
+}
+
+function gfRemoveMatch(mid) {
+  if (!confirm('Supprimer ce match et ses tirages ?')) return;
+  gf.matches = gf.matches.filter(m => m.id !== mid);
+  delete gfDraft[mid];
+  gfSave();
+  gfRender();
+}
+
+function gfToggleAlive(mid, pid) {
+  const m = gf.matches.find(x => x.id === mid);
+  if (!m || m.draws.length) return;
+  if (m.alive[pid]) delete m.alive[pid]; else m.alive[pid] = true;
+  gfSave();
+  gfRender();
+}
+
+function gfSetTeamAlive(mid, tid, value) {
+  const m = gf.matches.find(x => x.id === mid);
+  const t = gfTeam(tid);
+  if (!m || !t || m.draws.length) return;
+  t.players.forEach(p => { if (value) m.alive[p.id] = true; else delete m.alive[p.id]; });
+  gfSave();
+  gfRender();
+}
+
+function gfDraftSet(mid, key, value) {
+  gfDraft[mid] = gfDraft[mid] || {};
+  gfDraft[mid][key] = value;
+}
+
+// ----- Tirage parmi les survivants -----
+async function gfSpin(labels, finalLabel) {
+  const numEl = $('lotoNum');
+  numEl.style.letterSpacing = '0';
+  numEl.style.whiteSpace = 'nowrap';
+  const fit = s => { numEl.style.fontSize = s.length > 16 ? '18px' : s.length > 11 ? '24px' : '30px'; };
+  numEl.classList.add('spinning');
+  const duration = 2200 + Math.random() * 800;
+  const start = performance.now();
+  let last = '';
+  while (performance.now() - start < duration) {
+    const t = (performance.now() - start) / duration;
+    let n = labels[Math.floor(Math.random() * labels.length)];
+    if (n === last && labels.length > 1) n = labels[(labels.indexOf(n) + 1) % labels.length];
+    last = n;
+    fit(n);
+    numEl.textContent = n;
+    await sleep(40 + t * t * 180);
+  }
+  numEl.classList.remove('spinning');
+  fit(finalLabel);
+  numEl.textContent = finalLabel;
+  numEl.classList.add('winner-flash');
+  await sleep(500);
+  numEl.classList.remove('winner-flash');
+}
+
+async function gfDraw(mid) {
+  if (gfBusy) return;
+  const m0 = gf.matches.find(x => x.id === mid);
+  if (!m0) return;
+  const prize = (gfDraft[mid]?.prize || '').trim();
+  if (!prize) { alert('Donne un nom au prix avant de lancer le tirage.'); return; }
+  const count = Math.max(1, parseInt(gfDraft[mid]?.count) || 1);
+  const pool = gfEligible(m0);
+  if (!pool.length) { alert('Aucun survivant éligible : marque d’abord des joueurs comme survivants.'); return; }
+  if (pool.length < count) {
+    alert(`Il n’y a que ${pool.length} survivant(s) éligible(s) pour ${count} gagnant(s) demandé(s).`);
+    return;
+  }
+  gfBusy = true;
+
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const winners = shuffled.slice(0, count);
+
+  const overlay = createLotoOverlay(prize);
+  const balls = $('lotoBalls');
+  const reveal = $('lotoReveal');
+  const sub = $('lotoSub');
+  sub.textContent = 'Mélange des survivants…';
+  let animPool = [...pool];
+
+  for (let i = 0; i < winners.length; i++) {
+    const w = winners[i];
+    sub.textContent = winners.length > 1 ? `Tirage du gagnant ${i + 1} sur ${winners.length}…` : 'Tirage du gagnant…';
+    reveal.innerHTML = `<strong>🎱 Roulement des noms…</strong><small>Parmi les survivants</small>`;
+    await gfSpin(animPool.map(p => p.name), w.name);
+
+    const ball = document.createElement('div');
+    ball.className = 'loto-ball';
+    ball.textContent = w.name.slice(0, 2).toUpperCase();
+    ball.style.background = `radial-gradient(circle at 30% 28%,#fff,${w.color} 55%,#222)`;
+    balls.appendChild(ball);
+
+    reveal.innerHTML = `<strong>🎉 ${esc(w.name)}</strong><small>${esc(w.teamName)} — remporte « ${esc(prize)} »</small>`;
+    spawnConfetti();
+    animPool = animPool.filter(p => p.id !== w.id);
+    await sleep(900);
+  }
+
+  sub.textContent = 'Tirage terminé !';
+  $('lotoActions').classList.remove('hidden');
+  await new Promise(resolve => {
+    $('lotoCloseBtn').onclick = () => { overlay.remove(); resolve(); };
+  });
+
+  const m = gf.matches.find(x => x.id === mid);
+  if (m) {
+    m.draws.push({ id: gfId(), prize, winners });
+    gfDraft[mid] = { prize: '', count };
+    await gfSave();
+  }
+  gfBusy = false;
+  gfRender();
+}
+
+function gfUndo(mid) {
+  const m = gf.matches.find(x => x.id === mid);
+  if (!m || !m.draws.length) return;
+  m.draws.pop();
+  gfSave();
+  gfRender();
+}
+
+// ----- Rendu -----
+function gfRenderMatchTeams() {
+  const box = $('gfMatchTeams');
+  if (!gf.teams.length) {
+    box.innerHTML = '<div class="gf-muted">Crée d’abord au moins deux équipes.</div>';
+    return;
+  }
+  box.innerHTML = gf.teams
+    .map(t => {
+      const on = gfSel.includes(t.id);
+      return `<div class="gf-check ${on ? 'on' : ''}" onclick="TB.gfToggleSel('${t.id}')">
+        <span class="gf-dot" style="background:${t.color}"></span>${esc(t.name)}
+        <span class="gf-muted">(${t.players.length})</span>${on ? ' ✔' : ''}</div>`;
+    })
+    .join('');
+}
+
+function gfRender() {
+  gfPending = false;
+  gfSel = gfSel.filter(id => gfTeam(id));
+
+  // sélecteurs
+  if (!$('gfTeamColor').options.length) {
+    $('gfTeamColor').innerHTML = GF_COLORS.map((c, i) => `<option value="${i}">${c.e} ${c.n}</option>`).join('');
+  }
+  const prev = $('gfPlayerTeam').value;
+  $('gfPlayerTeam').innerHTML = gf.teams.length
+    ? gf.teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')
+    : '<option value="">— Aucune équipe —</option>';
+  if (prev && gfTeam(prev)) $('gfPlayerTeam').value = prev;
+
+  // stats
+  $('gfStatTeams').textContent = gf.teams.length;
+  $('gfStatPlayers').textContent = gf.teams.reduce((s, t) => s + t.players.length, 0);
+  $('gfStatMatches').textContent = gf.matches.length;
+  $('gfStatPrizes').textContent = gf.matches.reduce((s, m) => s + m.draws.length, 0);
+
+  // équipes
+  $('gfTeams').innerHTML = gf.teams.length
+    ? '<div class="gf-teams">' +
+      gf.teams
+        .map(
+          t => `<div class="gf-team" style="border-left-color:${t.color}">
+        <div class="gf-team-head"><span class="gf-dot" style="background:${t.color}"></span>
+          <h3>${esc(t.name)}</h3><span class="gf-muted">${t.players.length} joueur(s)</span>
+          <button class="danger gf-small" onclick="TB.gfRemoveTeam('${t.id}')">Supprimer</button></div>
+        <div>${
+          t.players.length
+            ? t.players
+                .map(p => `<span class="badge gf-chip">${esc(p.name)}<b title="Retirer" onclick="TB.gfRemovePlayer('${t.id}','${p.id}')">✕</b></span>`)
+                .join('')
+            : '<span class="gf-muted">Aucun joueur pour le moment.</span>'
+        }</div></div>`
+        )
+        .join('') +
+      '</div>'
+    : '<div class="empty">Aucune équipe pour le moment.</div>';
+
+  gfRenderMatchTeams();
+
+  // matchs
+  $('gfMatches').innerHTML = gf.matches.length
+    ? '<div class="gf-matches">' + gf.matches.map(gfMatchHTML).join('') + '</div>'
+    : '<div class="empty">Aucun match pour le moment.</div>';
+}
+
+function gfMatchHTML(m) {
+  const locked = m.draws.length > 0;
+  const surv = gfSurvivors(m);
+  const elig = gfEligible(m);
+  const draft = gfDraft[m.id] || {};
+  const vs = m.teamIds
+    .map(id => {
+      const t = gfTeam(id);
+      return t ? `<span style="color:${t.color}">${esc(t.name)}</span>` : '<span>?</span>';
+    })
+    .join('<i>VS</i>');
+
+  const cols = m.teamIds
+    .map(id => {
+      const t = gfTeam(id);
+      if (!t) return '';
+      const alive = t.players.filter(p => m.alive[p.id]).length;
+      return `<div class="gf-col" style="border-top-color:${t.color}">
+        <div class="gf-col-head"><b style="color:${t.color}">${esc(t.name)}</b>
+          <span class="gf-muted">${alive}/${t.players.length} en vie</span></div>
+        ${
+          t.players.length
+            ? `<div class="gf-players">${t.players
+                .map(
+                  p =>
+                    `<button class="gf-player ${m.alive[p.id] ? 'alive' : ''}" ${locked ? 'disabled' : ''} onclick="TB.gfToggleAlive('${m.id}','${p.id}')">${
+                      m.alive[p.id] ? '❤️' : '☠️'
+                    } ${esc(p.name)}</button>`
+                )
+                .join('')}</div>
+        <div class="actions" style="margin-top:10px">
+          <button class="secondary gf-small" ${locked ? 'disabled' : ''} onclick="TB.gfSetTeamAlive('${m.id}','${t.id}',true)">Tous survivants</button>
+          <button class="secondary gf-small" ${locked ? 'disabled' : ''} onclick="TB.gfSetTeamAlive('${m.id}','${t.id}',false)">Aucun</button>
+        </div>`
+            : '<span class="gf-muted">Aucun joueur dans cette équipe.</span>'
+        }
+      </div>`;
+    })
+    .join('');
+
+  const draws = m.draws
+    .map(
+      d => `<div class="winner"><strong>🏆 ${esc(d.prize)}</strong>${d.winners
+        .map(
+          w => `<small style="display:block;margin-top:3px"><span style="color:${w.color}">●</span> 🎉 <b style="color:#ffb703">${esc(w.name)}</b> — ${esc(w.teamName)}</small>`
+        )
+        .join('')}</div>`
+    )
+    .join('');
+
+  return `<div class="gf-match ${locked ? 'done' : ''}">
+    <div class="gf-match-head"><h3>${locked ? '✅' : '🔫'} ${esc(gfMatchTitle(m))}</h3>
+      <button class="danger gf-small" onclick="TB.gfRemoveMatch('${m.id}')">Supprimer le match</button></div>
+    <div class="gf-vs">${vs}</div>
+    <div class="gf-muted" style="margin-bottom:10px">Clique sur un nom pour indiquer s’il est resté en vie à la fin de la partie.</div>
+    <div class="gf-cols">${cols}</div>
+    <div class="gf-summary">❤️ Survivants : <b>${surv.length}</b> · 🎟️ Éligibles au tirage : <b>${elig.length}</b></div>
+    <div class="gf-prizeform">
+      <div><label>Prix à gagner</label>
+        <input type="text" placeholder="Ex. : Voiture, 10 000 $, Panier garni…" value="${esc(draft.prize || '')}" oninput="TB.gfDraftSet('${m.id}','prize',this.value)"></div>
+      <div><label>Nombre de gagnants</label>
+        <input type="number" min="1" value="${esc(draft.count || 1)}" oninput="TB.gfDraftSet('${m.id}','count',this.value)"></div>
+    </div>
+    <div class="actions">
+      <button class="success" onclick="TB.gfDraw('${m.id}')">🎲 Tirage au sort parmi les survivants</button>
+      <button class="secondary" ${locked ? '' : 'disabled'} onclick="TB.gfUndo('${m.id}')">↩️ Annuler le dernier tirage</button>
+    </div>
+    ${locked ? `<div class="gf-prizewins">${draws}</div>` : ''}
+  </div>`;
+}
+
+// Re-render différé si une mise à jour est arrivée pendant la saisie
+document.addEventListener('focusout', () => {
+  setTimeout(() => { if (gfPending && !gfTyping()) gfRender(); }, 60);
+});
+
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    if([...document.scripts].some(s=>s.src===src)) return res();
+    const s=document.createElement('script'); s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('Chargement impossible : '+src));
+    document.head.appendChild(s);
+  });
+}
+let initPromise=null;
+function setStatus(t,err){ const e=$('tbStatus'); if(e){ e.textContent=t; e.style.color=err?'#f87171':'#ffcf5c'; } }
+function open(){
+  render(); gfRender();
+  try { const t = localStorage.getItem('tombolaTab'); if (t === 'gunfight') tab('gunfight'); } catch (e) {}
+  if(initPromise) return initPromise;
+  setStatus('Connexion à la base de données de la tombola…');
+  initPromise=(async()=>{
+    await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js');
+    const app = firebase.apps.find(a=>a.name==='tombola') || firebase.initializeApp(firebaseConfig,'tombola');
+    db = app.firestore();
+    docRef = db.collection('tombolas').doc('current');
+    gfDocRef = db.collection('tombolas').doc('gunfight');
+    startRealtime(); startGF();
+    setStatus('Synchronisé en temps réel (Firebase) — visible par tous les utilisateurs.');
+  })().catch(e=>{ console.error(e); initPromise=null; setStatus('Connexion impossible : '+(e.message||e),true); });
+  return initPromise;
+}
+
+window.TB={addMore,addParticipant,applyDrawConfig,checkExisting,clearIdForm,drawNext,gfAddPlayers,gfAddTeam,gfCreateMatch,gfDraftSet,gfDraw,gfRemoveMatch,gfRemovePlayer,gfRemoveTeam,gfSetTeamAlive,gfToggleAlive,gfToggleSel,gfUndo,open,removeParticipant,resetAll,tab,undoLastDraw,updateDrawName};
+})();
+</script>
 </body>
 </html>
 
