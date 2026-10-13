@@ -394,6 +394,11 @@ button.cal-d:hover{border-color:rgba(74,163,255,.7);box-shadow:0 0 14px rgba(74,
 .cal-d.today .cal-n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:11px;background:var(--ac);color:#04122c}
 .cal-th{width:100%;height:46px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.12)}
 .cal-t{font-size:11px;font-weight:700;line-height:1.2;color:#ffb703;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.cal-pw{position:relative;display:block;border-radius:6px;overflow:hidden}
+.cal-pw .cal-th{height:84px;display:block;border:0;border-radius:0}
+.cal-ov{position:absolute;left:0;right:0;bottom:0;padding:14px 4px 3px;background:linear-gradient(transparent,rgba(0,0,0,.9));color:#fff;text-shadow:0 1px 2px #000}
+@media(max-width:640px){.cal-pw .cal-th{height:46px}.cal-ov{padding:8px 2px 2px}}
+.cal-g .cal-d .cal-pw{}
 .cal-plus{margin:auto;font-size:18px;color:rgba(148,163,184,.3);transition:color .15s}
 button.cal-d:hover .cal-plus{color:var(--ac)}
 .cal-up{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:12px;border:1px solid var(--bd);background:rgba(13,26,56,.5);transition:border-color .15s}
@@ -527,7 +532,6 @@ input,select,textarea{color:#ffb703!important}
         <button type="button" id="logoutBtn" class="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-sm font-semibold transition">Déconnexion</button>
         <button type="button" id="exp" class="px-4 py-2.5 rounded-xl bg-dark-700 hover:bg-dark-600 text-slate-200 border border-slate-700 text-sm font-semibold">Exporter</button>
         <button type="button" id="imp" class="px-4 py-2.5 rounded-xl bg-dark-700 hover:bg-dark-600 text-slate-200 border border-slate-700 text-sm font-semibold">Importer</button>
-        <button type="button" id="rstFiches" class="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-sm font-semibold transition">Fiches à zéro</button>
         <button type="button" id="nouveau" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-black font-extrabold text-sm shadow-lg shadow-brand-500/25">Recruter un agent</button>
       </div>
       <input type="file" id="impf" accept=".json,application/json" class="hidden">
@@ -2079,7 +2083,7 @@ function vCal(){
   for(var i=0;i<weeks*7;i++){
     var dt=addD(start,i),k=iso(dt),out=dt.getMonth()!==m,e=ev[k],has=calHas(e),
       cls='cal-d'+(out?' out':'')+(k===today?' today':'')+(has?' has':'')+(k<today?' past':''),
-      inner='<span class="cal-n">'+dt.getDate()+'</span>'+(has?(okImg(e.img)?'<img class="cal-th" src="'+e.img+'" alt="">':'')+'<span class="cal-t">'+esc(e.t||'Soirée')+'</span>':(staff&&!out?'<span class="cal-plus">＋</span>':''));
+      inner='<span class="cal-n">'+dt.getDate()+'</span>'+(has?(okImg(e.img)?'<span class="cal-pw"><img class="cal-th" src="'+e.img+'" alt=""><span class="cal-t cal-ov">'+esc(e.t||'Soirée')+'</span></span>':'<span class="cal-t">'+esc(e.t||'Soirée')+'</span>'):(staff&&!out?'<span class="cal-plus">＋</span>':''));
     cells+=(has||staff)?'<button type="button" class="'+cls+'" data-act="calday" data-d="'+k+'" aria-label="'+esc(fd(k)+(has?' : '+(e.t||'Soirée'):''))+'">'+inner+'</button>':'<div class="'+cls+'">'+inner+'</div>';
   }
   var grid='<div class="cal-g cal-h">'+CAL_WD.map(function(w){return '<div>'+w+'</div>';}).join('')+'</div><div class="cal-g">'+cells+'</div>';
@@ -2091,7 +2095,11 @@ var calDlg=mk('calDlg','max-w-lg','<div class="'+HD+'"><h2 class="text-base font
 var calDet=mk('calDet','max-w-lg','<div class="'+HD+'"><h2 class="text-base font-bold text-white">Détails de la soirée</h2><button type="button" class="text-slate-400 hover:text-white p-1" data-act="caldclose" aria-label="Fermer">✕</button></div><div id="cd_body" class="p-5 overflow-y-auto flex-1 min-h-0"></div><div class="'+FT+'"><a id="cd_dl" class="'+BTN+'" style="display:none" download="affiche.jpg">Télécharger l’affiche</a><button type="button" class="'+BTG+'" data-act="caldclose">Fermer</button></div>');
 calDet.addEventListener('click',function(e){if(e.target===calDet)calDet.close();});
 function calPrev(){$('k_p').innerHTML=okImg(CALIMG)?'<img src="'+CALIMG+'" class="max-h-56 rounded-lg border border-slate-700 object-contain" alt="Affiche"><button type="button" class="'+BTN+'" data-act="calnoimg">Retirer l’affiche</button>':'';}
-$('k_f').onchange=function(){var f=this.files[0];if(f)imgData(f,720,.72,function(d){CALIMG=d;calPrev();});};
+var OCRP=null;
+function loadOcr(){if(window.Tesseract)return Promise.resolve();if(OCRP)return OCRP;OCRP=new Promise(function(ok,ko){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=ok;s.onerror=function(){OCRP=null;ko();};document.head.appendChild(s);});return OCRP;}
+function guessTitle(data){var best=null,bs=0;(data.lines||[]).forEach(function(l){var t=(l.text||'').replace(/[^\wÀ-ÿ'’&!?:\- ]/g,' ').replace(/\s+/g,' ').trim();if(t.length<3||l.confidence<55||!/[A-Za-zÀ-ÿ]{3}/.test(t))return;var h=l.bbox?l.bbox.y1-l.bbox.y0:0,sc=h*Math.min(t.length,20);if(sc>bs){bs=sc;best=t;}});return best?best.slice(0,60):'';}
+function detectTitle(d){var inp=$('k_t');if(inp.value.trim())return;var old=inp.placeholder;inp.placeholder='Détection du titre sur l’affiche…';loadOcr().then(function(){return Tesseract.recognize(d,'fra');}).then(function(r){var t=guessTitle(r.data);if(t&&!inp.value.trim()){inp.value=t;}inp.placeholder=old;}).catch(function(){inp.placeholder=old;});}
+$('k_f').onchange=function(){var f=this.files[0];if(f)imgData(f,720,.72,function(d){CALIMG=d;calPrev();detectTitle(d);});};
 function calShow(d){
   var e=EV()[d]||{},day=new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var row=function(l,v){return v?'<div class="py-2 border-t border-slate-800/70"><div class="text-[10px] uppercase tracking-wider font-extrabold text-brand-400">'+l+'</div><div class="text-sm text-slate-200 break-words" style="white-space:pre-wrap">'+esc(v)+'</div></div>':'';};
@@ -2570,7 +2578,7 @@ window.offerReset=function(){
   /* Ne plus proposer automatiquement de tout effacer (incompatible multi-PC) */
   try{localStorage.setItem('sev_reset_v1','1');}catch(e){}
 };
-$("rstFiches").onclick=askReset;
+/* bouton Fiches à zéro retiré */
 
 /* ===== Facture (même direction artistique que la grille salariale) ===== */
 var FA={d:null};
@@ -2741,6 +2749,7 @@ render();
 
 </body>
 </html>
+
 
 
 
