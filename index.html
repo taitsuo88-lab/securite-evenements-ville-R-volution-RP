@@ -468,6 +468,8 @@ input,select,textarea{color:#ffb703!important}
 #v-tombola option{background:#0a0a0a;color:#ffb703}
 #v-tombola .formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 #v-tombola .formgrid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+#v-tombola .formgrid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media(max-width:1000px){#v-tombola .formgrid5{grid-template-columns:1fr 1fr 1fr}}
 #v-tombola button{border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;transition:filter .15s,background .15s}
 #v-tombola button:hover:not(:disabled){filter:brightness(1.12)}
 #v-tombola button:disabled{opacity:.45;cursor:not-allowed}
@@ -549,7 +551,7 @@ input,select,textarea{color:#ffb703!important}
 #v-tombola .gf-prizewins{margin-top:12px}
 @media(max-width:800px){
   #v-tombola .half{grid-column:span 12}
-  #v-tombola .formgrid,#v-tombola .formgrid4{grid-template-columns:1fr 1fr}
+  #v-tombola .formgrid,#v-tombola .formgrid4,#v-tombola .formgrid5{grid-template-columns:1fr 1fr}
   #v-tombola .stats{grid-template-columns:repeat(2,1fr)}
   #v-tombola .gf-prizeform{grid-template-columns:1fr}
 }
@@ -743,10 +745,11 @@ input,select,textarea{color:#ffb703!important}
       <img id="idPreview" alt="Carte d'identité">
     </div>
     <div class="idstatus" id="idStatus"></div>
-    <div class="formgrid4">
+    <div class="formgrid5">
       <div><label for="firstName">Prénom</label><input id="firstName" placeholder="Jean" oninput="TB.checkExisting()"></div>
       <div><label for="lastName">Nom</label><input id="lastName" placeholder="Dupont" oninput="TB.checkExisting()"></div>
       <div><label for="idCard">ID de carte</label><input id="idCard" placeholder="SAN-XXXXX" oninput="TB.checkExisting()"></div>
+      <div><label for="phone">Téléphone (GTA RP)</label><input id="phone" type="tel" placeholder="555-0123"></div>
       <div><label for="ticketQty">Tickets à acheter</label><input id="ticketQty" type="number" min="1" value="1"></div>
     </div>
     <div class="idhint" id="idHint"></div>
@@ -3304,7 +3307,7 @@ function checkExisting() {
 }
 
 function clearIdForm() {
-  $('lastName').value = ''; $('firstName').value = ''; $('idCard').value = ''; $('ticketQty').value = 1;
+  $('lastName').value = ''; $('firstName').value = ''; $('idCard').value = ''; $('phone').value = ''; $('ticketQty').value = 1;
   $('idPreview').style.display = 'none'; $('idPreview').src = '';
   $('idDrop').style.display = ''; $('idStatus').className = 'idstatus'; $('idHint').style.display = 'none';
   $('addBtn').textContent = 'Ajouter les tickets';
@@ -3322,7 +3325,8 @@ function addTicketsTo(existing, qty) {
 function addParticipant() {
   const nom = $('lastName').value.trim(),
     prenom = $('firstName').value.trim(),
-    idCard = $('idCard').value.trim().toUpperCase();
+    idCard = $('idCard').value.trim().toUpperCase(),
+    phone = $('phone').value.trim();
   const qty = Math.max(1, parseInt($('ticketQty').value) || 0);
   if (!nom || !prenom) {
     alert('Merci de renseigner le nom et le prénom.');
@@ -3336,8 +3340,9 @@ function addParticipant() {
   if (existing) {
     if (!addTicketsTo(existing, qty)) return;
     if (idCard && !existing.idCard) existing.idCard = idCard;
+    if (phone) existing.phone = phone;
   } else {
-    const p = { id: Date.now() + Math.random(), nom, prenom, idCard, tickets: [], batches: [] };
+    const p = { id: Date.now() + Math.random(), nom, prenom, idCard, phone, tickets: [], batches: [] };
     if (!addTicketsTo(p, qty)) return;
     state.participants.push(p);
   }
@@ -3728,7 +3733,7 @@ async function drawNext() {
     ball.textContent = '#' + w.ticket;
     balls.appendChild(ball);
 
-    reveal.innerHTML = `<strong>🎉 #${w.ticket} — ${esc(w.prenom)} ${esc(w.nom)}</strong><small>Tous les tickets de ce participant sont retirés des prochains tirages.</small>`;
+    reveal.innerHTML = `<strong>🎉 #${w.ticket} — ${esc(w.prenom)} ${esc(w.nom)}</strong><small>${w.phone ? '📞 ' + esc(w.phone) + ' — ' : ''}Tous les tickets de ce participant sont retirés des prochains tirages.</small>`;
     spawnConfetti();
     const owner = ownerOf(w.ticket);
     if (owner) {
@@ -3828,11 +3833,11 @@ function render() {
   if (!state.participants.length) {
     $('participantsTable').innerHTML = '<div class="empty">Aucun participant pour le moment.</div>';
   } else {
-    $('participantsTable').innerHTML = `<div class="tablewrap"><table><thead><tr><th>Prénom</th><th>Nom</th><th>Tickets</th><th>Total</th><th>Ajouter</th><th></th></tr></thead><tbody>
+    $('participantsTable').innerHTML = `<div class="tablewrap"><table><thead><tr><th>Prénom</th><th>Nom</th><th>Téléphone</th><th>Tickets</th><th>Total</th><th>Ajouter</th><th></th></tr></thead><tbody>
       ${state.participants
         .map(
           p =>
-            `<tr><td>${esc(p.prenom)}${p.idCard ? `<span class="idtag">🪪 ${esc(p.idCard)}</span>` : ''}</td><td>${esc(p.nom)}</td><td class="ticket-list">${formatTicketBatches(
+            `<tr><td>${esc(p.prenom)}${p.idCard ? `<span class="idtag">🪪 ${esc(p.idCard)}</span>` : ''}</td><td>${esc(p.nom)}</td><td>${p.phone ? '📞 ' + esc(p.phone) : '<span style="opacity:.5">—</span>'}</td><td class="ticket-list">${formatTicketBatches(
               p
             )}</td><td>${money(p.tickets.length * state.ticketPrice)}</td><td><div class="addmore"><input id="more-${String(p.id).replace('.', '_')}" type="number" min="1" value="1"><button class="primary" onclick="TB.addMore(${p.id})">+ tickets</button></div></td><td><button class="danger" onclick="TB.removeParticipant(${
               p.id
@@ -3864,7 +3869,7 @@ function render() {
                 w =>
                   `<div class="winner"><strong>🎉 #${w.ticket} — ${esc(w.prenom)} ${esc(
                     w.nom
-                  )}</strong><small>Tous les tickets de ce participant sont retirés des prochains tirages.</small></div>`
+                  )}</strong><small>${w.phone ? '📞 ' + esc(w.phone) + ' — ' : ''}Tous les tickets de ce participant sont retirés des prochains tirages.</small></div>`
               )
               .join('')
           : '<div class="draw-info" style="margin-top:12px">En attente du tirage.</div>'
