@@ -2762,13 +2762,74 @@ function slipText(p,r){var a=p.a,L=['FEUILLE DE PAIE — Sécurité Événements
 ACT.cmode=function(t){CP.t=t.dataset.m;drawView();};
 ACT.cstep=function(t){cShift(+t.dataset.n);drawView();};
 ACT.ctoday=function(){CP.d=iso(new Date());drawView();};
-ACT.cpaid=function(t){var k=t.dataset.k,p=C().paid;if(p[k])delete p[k];else p[k]=1;saveP();drawView();};
+// Discord payroll delivery — PNG generated from the existing payslip design.
+window.SEV_DISCORD_WORKER_URL = 'https://discord.com/api/webhooks/1568275075931709563/9vATZY1Zs5X7Yy1I_ftiVIFC8l9Q11aSiMvjwwjucJnve2HTlx4T9ZgabzmtNGDm-kCu';
+
+function renderSlipPng(a,p,r){
+  return new Promise(function(resolve,reject){
+    var host=document.createElement('div');
+    host.style.cssText='position:fixed;left:-12000px;top:0;width:760px;z-index:-1;pointer-events:none;';
+    host.innerHTML=slipHTML(p,r);
+    document.body.appendChild(host);
+    function cleanup(){if(host.parentNode)host.parentNode.removeChild(host);}
+    loadH2C(function(){
+      Promise.resolve(document.fonts&&document.fonts.ready?document.fonts.ready:null)
+      .then(function(){
+        return html2canvas(host.firstElementChild,{backgroundColor:null,scale:2,useCORS:true,logging:false});
+      })
+      .then(function(cv){
+        cv.toBlob(function(blob){
+          cleanup();
+          if(!blob) return reject(new Error('Impossible de créer le PNG de la fiche de paie.'));
+          resolve(blob);
+        },'image/png');
+      })
+      .catch(function(err){cleanup();reject(err);});
+    },reject);
+  });
+}
+async function sendPayrollPngToDiscord(a,p,r){
+  var endpoint=String(window.SEV_DISCORD_WORKER_URL||'').trim();
+  if(!endpoint||endpoint.indexOf('VOTRE-WORKER')!==-1){
+    throw new Error('Le Worker Discord n’est pas encore configuré dans index.html.');
+  }
+  var token=await window.LSPS_FB.getIdToken();
+  if(!token) throw new Error('Session Firebase introuvable. Reconnecte-toi.');
+  var blob=await renderSlipPng(a,p,r);
+  var slug=(a.nom||'agent').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'agent';
+  var filename='fiche-de-paie_'+slug+'_'+r.f+(r.t!==r.f?'_'+r.t:'')+'.png';
+  var data={agent:a.nom||'Agent',matricule:a.matricule||'Non renseigné',poste:a.poste||a.grade||'Non renseigné',periode:r.l,montant:Number(p.net||0).toFixed(2)+' $',date:new Date().toLocaleString('fr-FR'),filename:filename};
+  var form=new FormData();
+  form.append('file',blob,filename);
+  form.append('payload',JSON.stringify(data));
+  var response=await fetch(endpoint,{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
+  var result={};
+  try{result=await response.json();}catch(e){}
+  if(!response.ok) throw new Error(result.error||('Erreur Discord / Worker ('+response.status+').'));
+  return result;
+}
+ACT.cpaid=async function(t){
+  var k=t.dataset.k,paid=C().paid;
+  if(paid[k]){delete paid[k];saveP();drawView();etat('Paiement repassé à « À payer ».');return;}
+  var r=cRange(),p=cRows(r).find(function(x){return x.k===k;});
+  if(!p){etat('Impossible de retrouver la fiche de paie.');return;}
+  p.paid=true;t.disabled=true;t.textContent='Envoi PNG…';
+  try{
+    await sendPayrollPngToDiscord(p.a,p,r);
+    paid[k]=1;saveP();drawView();
+    etat('Paiement validé — fiche PNG envoyée sur Discord.');
+  }catch(err){
+    console.error('[SEV Discord]',err);t.disabled=false;t.textContent='À payer';
+    etat('Envoi Discord impossible : '+(err&&err.message?err.message:'erreur inconnue'));
+    alert('La fiche de paie n’a pas été envoyée. Le paiement reste « À payer ».\n\n'+(err&&err.message?err.message:'Erreur inconnue'));
+  }
+};
 ACT.cslip=function(t){var a=byId(t.dataset.id);if(!a)return;SL=a.id;$('slipBody').innerHTML=slipHTML(cPay(a,cRange()),cRange());$('slip').showModal();};
 ACT.slipclose=function(){$('slip').close();};
-function loadH2C(cb){
+function loadH2C(cb,onError){
   if(window.html2canvas)return cb();
   var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-  sc.onload=cb;sc.onerror=function(){etat('Impossible de charger le module d’export image (connexion ?).');};
+  sc.onload=cb;sc.onerror=function(){var e=new Error('Impossible de charger le module d’export image (connexion ?).');etat(e.message);if(onError)onError(e);};
   document.head.appendChild(sc);
 }
 function slipImg(fmt){
