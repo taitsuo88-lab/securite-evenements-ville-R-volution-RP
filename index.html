@@ -2858,6 +2858,10 @@ ACT.cstep=function(t){cShift(+t.dataset.n);drawView();};
 ACT.ctoday=function(){CP.d=iso(new Date());drawView();};
 // Discord payroll delivery — PNG generated from the existing payslip design.
 window.SEV_DISCORD_WORKER_URL = 'https://securite-paie-api.taitsuo88.workers.dev';
+/* Optionnel : colle ici l’URL du webhook Discord du salon #paies
+   (Paramètres du salon → Intégrations → Webhooks → Nouveau webhook → Copier l’URL)
+   Si renseigné, l’envoi passe par le Worker avec ce webhook. */
+window.SEV_DISCORD_WEBHOOK_URL = window.SEV_DISCORD_WEBHOOK_URL || '';
 
 function renderSlipPng(a,p,r){
   return new Promise(function(resolve,reject){
@@ -2869,7 +2873,7 @@ function renderSlipPng(a,p,r){
     loadH2C(function(){
       Promise.resolve(document.fonts&&document.fonts.ready?document.fonts.ready:null)
       .then(function(){
-        return html2canvas(host.firstElementChild,{backgroundColor:null,scale:2,useCORS:true,logging:false});
+        return html2canvas(host.firstElementChild,{backgroundColor:'#040a18',scale:2,useCORS:true,logging:false});
       })
       .then(function(cv){
         cv.toBlob(function(blob){
@@ -2885,23 +2889,54 @@ function renderSlipPng(a,p,r){
 async function sendPayrollPngToDiscord(a,p,r){
   var endpoint=String(window.SEV_DISCORD_WORKER_URL||'').trim();
   if(!endpoint||endpoint.indexOf('VOTRE-WORKER')!==-1){
-    throw new Error('Le Worker Discord n’est pas encore configuré dans index.html.');
+    throw new Error('Le Worker Discord n’est pas configuré (SEV_DISCORD_WORKER_URL).');
   }
-  var token=await window.LSPS_FB.getIdToken();
-  if(!token) throw new Error('Session Firebase introuvable. Reconnecte-toi.');
   var blob=await renderSlipPng(a,p,r);
   var slug=(a.nom||'agent').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'agent';
   var filename='fiche-de-paie_'+slug+'_'+r.f+(r.t!==r.f?'_'+r.t:'')+'.png';
-  var data={agent:a.nom||'Agent',matricule:a.matricule||'Non renseigné',poste:a.poste||a.grade||'Non renseigné',periode:r.l,montant:Number(p.net||0).toFixed(2)+' $',date:new Date().toLocaleString('fr-FR'),filename:filename};
+  var data={
+    agent:a.nom||'Agent',
+    matricule:a.matricule||'Non renseigné',
+    poste:a.poste||a.grade||'Non renseigné',
+    periode:r.l,
+    montant:Number(p.net||0).toFixed(2)+' $',
+    soirees:String(p.n||0),
+    date:new Date().toLocaleString('fr-FR'),
+    filename:filename
+  };
   var form=new FormData();
   form.append('file',blob,filename);
   form.append('payload',JSON.stringify(data));
-  var response=await fetch(endpoint,{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
+  var webhook=String(window.SEV_DISCORD_WEBHOOK_URL||'').trim();
+  if(webhook) form.append('webhook',webhook);
+
+  var headers={};
+  try{
+    if(window.LSPS_FB&&typeof window.LSPS_FB.getIdToken==='function'){
+      var token=await window.LSPS_FB.getIdToken();
+      if(token) headers['Authorization']='Bearer '+token;
+    }
+  }catch(e){ console.warn('[SEV] token Firebase indisponible',e); }
+
+  var response;
+  try{
+    response=await fetch(endpoint,{method:'POST',headers:headers,body:form,mode:'cors'});
+  }catch(netErr){
+    throw new Error('Réseau / CORS : le Worker refuse probablement l’origine de cette page. Ouvre le portail via une URL http(s) (pas en fichier local), ou redéploie le Worker fourni.');
+  }
   var result={};
-  try{result=await response.json();}catch(e){}
-  if(!response.ok) throw new Error(result.error||('Erreur Discord / Worker ('+response.status+').'));
+  var raw='';
+  try{raw=await response.text();result=raw?JSON.parse(raw):{};}catch(e){result={error:raw||('HTTP '+response.status)};}
+  if(!response.ok){
+    var msg=result.error||result.message||('Erreur Worker Discord (HTTP '+response.status+').');
+    if(response.status===403||/origine/i.test(String(msg))){
+      msg+=' → Redéploie le Worker (voir discord-paie-worker.js) avec CORS ouvert, ou héberge la page sur un domaine autorisé.';
+    }
+    throw new Error(msg);
+  }
   return result;
 }
+
 ACT.cpaid=async function(t){
   var k=t.dataset.k;if(!k)return;
   var paid=C().paid;
