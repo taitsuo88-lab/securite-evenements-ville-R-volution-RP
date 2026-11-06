@@ -2778,7 +2778,7 @@ function vCompta(){
           : '<div class="text-[10px] text-slate-600 mt-1">Aucune soirée pointée</div>';
         var payBtn=p.paid
           ? '<button type="button" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-xs font-semibold" data-act="cpaid" data-k="'+esc(p.k)+'">✓ Payé</button>'
-          : '<button type="button" class="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs font-semibold" data-act="cpaid" data-k="'+esc(p.k)+'">À payer</button>';
+          : '<button type="button" class="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs font-semibold" data-act="cpaid" data-k="'+esc(p.k)+'" title="Génère la fiche PNG et l’envoie sur Discord">À payer · Discord</button>';
         tb+='<tr class="border-t border-slate-800/70'+(p.n?'':' opacity-60')+'">'+
           '<td class="px-3 py-3 align-middle"><div class="flex items-center gap-2">'+av(a)+
             '<div><div class="font-semibold text-white">'+esc(a.nom||'Sans nom')+'</div>'+
@@ -2799,7 +2799,7 @@ function vCompta(){
       }).join('')+
       '</tr></thead><tbody>'+tb+'</tbody></table></div>';
 
-    var help='<p class="text-xs text-slate-500 mt-3">Le salaire est calculé <b>par soirée pointée</b> (tarif × nombre de soirs validés au pointage). Clique sur <b>À payer</b> pour marquer comme <b>Payé</b> (et inversement). Les agents sans pointage sur la période apparaissent grisés.</p>';
+    var help='<p class="text-xs text-slate-500 mt-3">Le salaire est calculé <b>par soirée pointée</b> (tarif × nombre de soirs validés au pointage). Clique sur <b>À payer · Discord</b> pour générer la fiche PNG, l’envoyer sur le salon Discord, puis marquer comme <b>Payé</b>. Un second clic annule le statut (sans renvoyer). Les agents sans pointage sur la période apparaissent grisés.</p>';
 
     return bar+cards+table+help;
   }catch(err){
@@ -2902,29 +2902,37 @@ async function sendPayrollPngToDiscord(a,p,r){
   if(!response.ok) throw new Error(result.error||('Erreur Discord / Worker ('+response.status+').'));
   return result;
 }
-ACT.cpaid=function(t){
+ACT.cpaid=async function(t){
   var k=t.dataset.k;if(!k)return;
   var paid=C().paid;
+  // Déjà payé → repasser en « À payer » (sans Discord)
   if(paid[k]){
     delete paid[k];
     saveP();drawView();
     etat('Repassé en « À payer ».');
     return;
   }
-  paid[k]=1;
-  saveP();drawView();
-  etat('Marqué comme payé.');
-  // Envoi Discord optionnel (ne bloque pas le statut payé)
+  var r=cRange(),p=cRows(r).find(function(x){return x.k===k;});
+  if(!p){etat('Impossible de retrouver la fiche de paie.');return;}
+  var btn=t;
+  btn.disabled=true;
+  var prev=btn.textContent;
+  btn.textContent='Envoi PNG…';
+  etat('Génération de la fiche de paie et envoi Discord…');
   try{
-    var r=cRange(),p=cRows(r).find(function(x){return x.k===k;});
-    if(p&&typeof sendPayrollPngToDiscord==='function'){
-      sendPayrollPngToDiscord(p.a,p,r).then(function(){
-        etat('Payé — fiche PNG envoyée sur Discord.');
-      }).catch(function(err){
-        console.warn('[SEV Discord]',err);
-      });
-    }
-  }catch(e){console.warn(e);}
+    await sendPayrollPngToDiscord(p.a,p,r);
+    paid[k]=1;
+    saveP();
+    drawView();
+    etat('✓ Payé — fiche PNG envoyée sur Discord.');
+  }catch(err){
+    console.error('[SEV Discord]',err);
+    btn.disabled=false;
+    btn.textContent=prev||'À payer';
+    var msg=(err&&err.message)?err.message:'erreur inconnue';
+    etat('Envoi Discord impossible : '+msg);
+    alert('La fiche de paie n’a pas été envoyée sur Discord.\nLe statut reste « À payer ».\n\n'+msg);
+  }
 }
 ACT.cslip=function(t){var a=byId(t.dataset.id);if(!a)return;SL=a.id;$('slipBody').innerHTML=slipHTML(cPay(a,cRange()),cRange());$('slip').showModal();};
 ACT.slipclose=function(){$('slip').close();};
