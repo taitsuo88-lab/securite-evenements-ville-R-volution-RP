@@ -2763,7 +2763,7 @@ ACT.cmode=function(t){CP.t=t.dataset.m;drawView();};
 ACT.cstep=function(t){cShift(+t.dataset.n);drawView();};
 ACT.ctoday=function(){CP.d=iso(new Date());drawView();};
 // Discord payroll delivery — PNG generated from the existing payslip design.
-window.SEV_DISCORD_WORKER_URL = 'https://securite-evenements-ville-r-volution-rp.taitsuo88.workers.dev';
+window.SEV_DISCORD_WORKER_URL = 'https://securite-paie-api.taitsuo88.workers.dev';
 
 function renderSlipPng(a,p,r){
   return new Promise(function(resolve,reject){
@@ -2819,6 +2819,7 @@ ACT.cpaid=async function(t){
     paid[k]=1;saveP();drawView();
     etat('Paiement validé — fiche PNG envoyée sur Discord.');
   }catch(err){
+    p.paid = false;
     console.error('[SEV Discord]',err);t.disabled=false;t.textContent='À payer';
     etat('Envoi Discord impossible : '+(err&&err.message?err.message:'erreur inconnue'));
     alert('La fiche de paie n’a pas été envoyée. Le paiement reste « À payer ».\n\n'+(err&&err.message?err.message:'Erreur inconnue'));
