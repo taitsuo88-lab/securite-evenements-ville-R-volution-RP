@@ -2080,7 +2080,9 @@ function saveP(){
 }
 
 /* ---- aides ---- */
-function catOf(a){if(a.categorie)return a.categorie;var p=(typeof PRESET!=='undefined'&&PRESET)?(PRESET[a.poste]||PRESET[GRADE_POSTE[a.grade]]):null;return p?p.c:'secu_cdi';}
+function catOf(a){if(a&&a.categorie&&CATS[a.categorie])return a.categorie;var p=(typeof PRESET!=='undefined'&&PRESET)?(PRESET[a.poste]||PRESET[GRADE_POSTE[a&&a.grade]]||PRESET[a&&a.poste]):null;return (p&&CATS[p.c])?p.c:'secu_cdi';}
+function catLabel(a){var c=catOf(a);return (CATS[c]&&CATS[c][0])||'Agent';}
+function catColor(a){var c=catOf(a);return (CATS[c]&&CATS[c][1])||'#94a3b8';}
 function isSecu(a){var c=catOf(a);return c==='secu_cdi'||c==='secu_free'||c==='resp_secu'||c==='chef_secu';}
 function is1099(a){return (a.contrat||(catOf(a)==='secu_free'?'1099':'W2F'))==='1099';}
 function pool(){return agents.filter(function(a){return a.statut==='Actif'||a.statut==='En congé';});}
@@ -2163,7 +2165,15 @@ function drawView(){
   if(view==='tombola')return;
   var t=TT[view],s=typeof t[1]==='function'?t[1]():t[1],f={cal:vCal,dash:vDash,plan:vPlan,clock:vClock,compta:vCompta,soiree:vSoiree,facture:vFacture,contrats:vContrats,inc:vInc,comptes:vComptes}[view];
   var sc=document.querySelector('#v-other .tscroll'),sl=sc?sc.scrollLeft:0;
-  $('v-other').innerHTML='<h2 class="text-2xl font-black text-white tracking-tight">'+t[0]+'</h2><p class="text-slate-400 text-sm mb-5">'+s+'</p>'+f();
+  try{
+    if(!t){ $('v-other').innerHTML='<p class="text-amber-400 p-4">Vue inconnue : '+esc(String(view))+'</p>'; return; }
+    if(typeof f!=='function'){ $('v-other').innerHTML='<h2 class="text-2xl font-black text-white">'+t[0]+'</h2><p class="text-rose-400 mt-3">Fonction de vue manquante.</p>'; return; }
+    var body=f();
+    $('v-other').innerHTML='<h2 class="text-2xl font-black text-white tracking-tight">'+t[0]+'</h2><p class="text-slate-400 text-sm mb-5">'+s+'</p>'+(body||'');
+  }catch(err){
+    console.error('[SEV] drawView '+view,err);
+    $('v-other').innerHTML='<h2 class="text-2xl font-black text-white">'+(t&&t[0]?t[0]:view)+'</h2><p class="text-rose-400 text-sm mt-3">Erreur d’affichage : '+esc(err&&err.message?err.message:'inconnue')+'</p>';
+  }
   var s2=document.querySelector('#v-other .tscroll');if(s2)s2.scrollLeft=sl;
 }
 setInterval(function(){if(document.hidden)return;document.querySelectorAll('[data-since]').forEach(function(e){e.textContent=fDur(Date.now()-Number(e.dataset.since));});},30000);
@@ -2284,7 +2294,7 @@ var ACT={
   hrsall:function(){var m=P.hours[0];P.hours=P.hours.map(function(){return{o:m.o,f:m.f,t:m.t};});saveP();drawView();etat('Horaires du lundi copiés sur la semaine.');},
   export:function(){
     var r=[['Agent','Matricule','Catégorie','Statut d’emploi','Soirées (30 j)','Tarif','Brut (USD)','Taxes patronales (USD)','Total (USD)','Paiement']];
-    pool().forEach(function(a){var p=payOf(a);r.push([a.nom,a.matricule||'',CATS[catOf(a)][0],CT[a.contrat||(catOf(a)==='secu_free'?'1099':'W2F')],a.remu==='m'?'':p.n,a.tarif||0,p.g.toFixed(2),p.x.toFixed(2),p.T.toFixed(2),P.pay[a.id]==='paid'?'Payé':'À payer']);});
+    pool().forEach(function(a){var p=payOf(a);r.push([a.nom,a.matricule||'',catLabel(a),CT[a.contrat||(catOf(a)==='secu_free'?'1099':'W2F')],a.remu==='m'?'':p.n,a.tarif||0,p.g.toFixed(2),p.x.toFixed(2),p.T.toFixed(2),P.pay[a.id]==='paid'?'Payé':'À payer']);});
     var csv='\ufeff'+r.map(function(x){return x.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
     var u=URL.createObjectURL(new Blob([csv],{type:'text/csv'})),l=document.createElement('a');l.href=u;l.download='paie-'+iso(new Date())+'.csv';document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);etat('Export de la paie réalisé.');
   }
@@ -2677,44 +2687,127 @@ document.addEventListener('change',function(e){
   else{var k=el.dataset.set.split('.'),o=P;for(var i=0;i<k.length-1;i++)o=o[k[i]];o[k[k.length-1]]=v;}
   saveP();drawView();
 });
-/* ---- comptabilité : dépenses de salaires et feuilles de paie (jour / semaine / mois) ---- */
+/* ---- comptabilité : salaires à verser par soirée (jour / semaine / mois) ---- */
 var CP={t:'w',d:iso(new Date())},SL=null,CPL={d:'Jour',w:'Semaine',m:'Mois'};
 function C(){P.compta=P.compta||{};P.compta.adj=P.compta.adj||{};P.compta.paid=P.compta.paid||{};return P.compta;}
 function cRange(){
   var d=new Date(CP.d+'T12:00:00'),f,t;
+  if(isNaN(d.getTime())){d=new Date();CP.d=iso(d);}
   if(CP.t==='d'){f=t=iso(d);}
   else if(CP.t==='w'){f=iso(monday(d));t=iso(addD(monday(d),6));}
   else{f=iso(new Date(d.getFullYear(),d.getMonth(),1,12));t=iso(new Date(d.getFullYear(),d.getMonth()+1,0,12));}
-  return{f:f,t:t,l:f===t?fd(f):'du '+fd(f)+' au '+fd(t)};
+  return{f:f,t:t,l:f===t?fd(f):('du '+fd(f)+' au '+fd(t))};
 }
 function cShift(n){var d=new Date(CP.d+'T12:00:00');if(CP.t==='d')d.setDate(d.getDate()+n);else if(CP.t==='w')d.setDate(d.getDate()+7*n);else d.setMonth(d.getMonth()+n,1);CP.d=iso(d);}
+function cTarif(a){var t=+((a&&a.tarif)||0);if(t)return t;try{return +grilleOf(a)||0;}catch(e){return 0;}}
+function cLogDays(a,r){
+  var ds={},ents=[],logs=(P&&Array.isArray(P.log))?P.log:[];
+  logs.forEach(function(l){
+    if(!l||l.e!==a.id||!l.d||l.d<r.f||l.d>r.t)return;
+    if(!(+l.h>0))return;
+    ds[l.d]=1;ents.push(l);
+  });
+  return{days:Object.keys(ds).sort(),ents:ents};
+}
 function cPay(a,r){
-  var ds={},h=0,ents=[],g=0;
-  P.log.forEach(function(l){if(l.e===a.id&&l.d>=r.f&&l.d<=r.t&&l.h>0){ds[l.d]=1;h+=l.h;ents.push(l);}});
-  var n=Object.keys(ds).length,tf=+a.tarif||0;
-  if(a.remu==='m'){for(var x=new Date(r.f+'T12:00:00'),e=new Date(r.t+'T12:00:00');x<=e;x.setDate(x.getDate()+1)){g+=tf/new Date(x.getFullYear(),x.getMonth()+1,0).getDate();}}
-  else g=n*tf;
-  var k=a.id+'|'+CP.t+'|'+r.f,j=C().adj[k]||{},pr=+j.p||0,de=+j.d||0,tx=is1099(a)?0:P.tax/100,base=g+pr,net=base-de,tax=base*tx;
-  return{a:a,n:n,h:h,g:g,pr:pr,de:de,net:net,tax:tax,cost:net+tax,k:k,paid:!!C().paid[k],ents:ents};
+  var info=cLogDays(a,r),days=info.days,n=days.length,tf=cTarif(a),g=0,h=0;
+  info.ents.forEach(function(l){h+=(+l.h||0);});
+  if(a&&a.remu==='m'){
+    for(var x=new Date(r.f+'T12:00:00'),e=new Date(r.t+'T12:00:00');x<=e;x.setDate(x.getDate()+1)){
+      var dim=new Date(x.getFullYear(),x.getMonth()+1,0).getDate();
+      g+=tf/Math.max(1,dim);
+    }
+  }else{
+    g=n*tf;
+  }
+  var k=String(a.id)+'|'+CP.t+'|'+r.f,j=(C().adj&&C().adj[k])||{},pr=+j.p||0,de=+j.d||0;
+  var tx=0;try{tx=is1099(a)?0:((+P.tax||0)/100);}catch(e){tx=0;}
+  var base=g+pr,net=Math.max(0,base-de),tax=base*tx;
+  return{a:a,n:n,h:h,g:g,pr:pr,de:de,net:net,tax:tax,cost:net+tax,k:k,paid:!!(C().paid&&C().paid[k]),days:days,ents:info.ents,tf:tf};
 }
 function cRows(r){
-  var rows=[];
-  agents.forEach(function(a){var inP=a.statut==='Actif'||a.statut==='En congé',p=cPay(a,r);if(inP||(p.n>0&&a.remu!=='m'))rows.push(p);});
-  return rows.sort(function(x,y){return CATO.indexOf(catOf(x.a))-CATO.indexOf(catOf(y.a))||x.a.nom.localeCompare(y.a.nom);});
+  var rows=[],list=Array.isArray(agents)?agents:[];
+  list.forEach(function(a){
+    if(!a||!a.id)return;
+    var inP=a.statut==='Actif'||a.statut==='En congé';
+    var p=cPay(a,r);
+    if(inP||p.n>0)rows.push(p);
+  });
+  rows.sort(function(x,y){
+    var nx=String((x.a&&x.a.nom)||''),ny=String((y.a&&y.a.nom)||'');
+    if(y.n!==x.n)return y.n-x.n;
+    return nx.localeCompare(ny,'fr');
+  });
+  return rows;
 }
 function vCompta(){
-  var r=cRange(),rows=cRows(r),T={net:0,tax:0,cost:0,due:0};
-  rows.forEach(function(p){T.net+=p.net;T.tax+=p.tax;T.cost+=p.cost;if(!p.paid)T.due+=p.net;});
-  var tabs=['d','w','m'].map(function(k){return '<button type="button" class="'+(CP.t===k?BTG:BTN)+'" data-act="cmode" data-m="'+k+'">'+CPL[k]+'</button>';}).join('');
-  var bar='<div class="flex flex-wrap items-center gap-2 mb-4"><div class="flex gap-1.5">'+tabs+'</div><button class="'+BTN+'" data-act="cstep" data-n="-1" aria-label="Période précédente">‹</button><input type="date" class="'+INP+'" data-cc="date" value="'+CP.d+'" aria-label="Date de référence"><button class="'+BTN+'" data-act="cstep" data-n="1" aria-label="Période suivante">›</button><button class="'+BTN+'" data-act="ctoday">Aujourd’hui</button><strong class="text-white text-sm ml-1">'+r.l+'</strong><label class="ml-auto flex items-center gap-2 text-xs text-slate-400" for="s_tax">Charges patronales W-2 (%)<input id="s_tax" type="number" step="0.01" min="0" max="60" class="'+INP+' w-20" data-set="tax" value="'+P.tax+'"></label><button class="'+BTN+'" data-act="ccsv">Exporter en CSV</button></div>';
-  var th=['Agent','Soirées','Tarif','Brut','Prime','Retenue','Net à payer','Charges','Paiement',''];
-  var inp=function(c,k,v){return '<input type="number" min="0" step="0.01" class="'+INP+' w-[76px] !px-2" data-cc="'+c+'" data-k="'+esc(k)+'" value="'+(v||'')+'" aria-label="'+(c==='p'?'Prime':'Retenue')+'">';};
-  var tb=rows.map(function(p){var a=p.a,m=a.remu==='m';
-    return '<tr class="border-t border-slate-800/70"><td class="px-2 py-2 align-middle"><div class="flex items-center gap-2">'+av(a)+'<div><div class="font-semibold text-white">'+esc(a.nom)+'</div><div class="text-[11px] text-slate-400">'+esc(CATS[catOf(a)][0])+'</div></div></div></td><td class="px-2 py-2 align-middle">'+(m?'–':p.n)+'</td><td class="px-2 py-2 align-middle">'+(m?'Mensuel':money(a.tarif||0)+'<span class="text-slate-500"> /soirée</span>')+'</td><td class="px-2 py-2 align-middle">'+money(p.g)+'</td><td class="px-2 py-2 align-middle">'+inp('p',p.k,p.pr)+'</td><td class="px-2 py-2 align-middle">'+inp('d',p.k,p.de)+'</td><td class="px-2 py-2 align-middle font-bold text-white">'+money(p.net)+'</td><td class="px-2 py-2 align-middle">'+(p.tax?money(p.tax):'–')+'</td><td class="px-2 py-2 align-middle"><button class="'+(p.paid?BTN:'px-3 py-1.5 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/40 text-xs font-semibold')+'" data-act="cpaid" data-k="'+esc(p.k)+'">'+(p.paid?'Payé':'À payer')+'</button></td><td class="px-2 py-2 align-middle"><button class="'+BTN+'" data-act="cslip" data-id="'+a.id+'" title="Feuille de paie">📄 Paie</button></td></tr>';}).join('');
-  return bar+'<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">'+kpi(money(T.net),'salaires à verser')+kpi(money(T.tax),'charges patronales')+kpi(money(T.cost),'coût total','text-brand-400')+kpi(money(T.due),'restant à régler',T.due?'text-amber-400':'text-emerald-400')+'</div>'+
-  '<div class="tscroll overflow-x-auto rp-panel max-w-full"><table class="w-full text-xs"><thead><tr>'+th.map(function(t){return '<th class="text-left px-2 py-3 text-xs text-slate-400">'+t+'</th>';}).join('')+'</tr></thead><tbody>'+(tb||'<tr><td colspan="10">'+empty('Aucun agent à afficher.')+'</td></tr>')+'</tbody></table></div>'+
-  '<p class="text-xs text-slate-500 mt-3">Les soirées sont comptées à la date de validation du pointage. Les salaires mensuels fixes sont proratisés au jour. Net à payer = brut + prime − retenue ; charges patronales ('+P.tax+' %, W-2 uniquement) en plus du net. Historique de pointage conservé 190 jours.</p>';
+  try{
+    var r=cRange(),rows=cRows(r),T={net:0,tax:0,cost:0,due:0,soirees:0,agents:0};
+    rows.forEach(function(p){
+      T.net+=p.net;T.tax+=p.tax;T.cost+=p.cost;T.soirees+=p.n;
+      if(p.n>0)T.agents++;
+      if(!p.paid)T.due+=p.net;
+    });
+    var tabs=['d','w','m'].map(function(k){
+      return '<button type="button" class="'+(CP.t===k?BTG:BTN)+'" data-act="cmode" data-m="'+k+'">'+CPL[k]+'</button>';
+    }).join('');
+    var bar='<div class="flex flex-wrap items-center gap-2 mb-4">'+
+      '<div class="flex gap-1.5">'+tabs+'</div>'+
+      '<button class="'+BTN+'" data-act="cstep" data-n="-1" aria-label="Période précédente">‹</button>'+
+      '<input type="date" class="'+INP+'" data-cc="date" value="'+CP.d+'" aria-label="Date de référence">'+
+      '<button class="'+BTN+'" data-act="cstep" data-n="1" aria-label="Période suivante">›</button>'+
+      '<button class="'+BTN+'" data-act="ctoday">Aujourd’hui</button>'+
+      '<strong class="text-white text-sm ml-1">'+r.l+'</strong>'+
+      '<button class="'+BTN+' ml-auto" data-act="ccsv">Exporter CSV</button>'+
+    '</div>';
+    var cards='<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">'+
+      kpi(money(T.net),'salaires à verser')+
+      kpi(String(T.soirees),'soirées pointées')+
+      kpi(String(T.agents),'agents concernés')+
+      kpi(money(T.due),'restant à régler',T.due?'text-amber-400':'text-emerald-400')+
+    '</div>';
+
+    var tb='';
+    if(!rows.length){
+      tb='<tr><td colspan="7" class="px-3 py-6">'+empty('Aucun agent à afficher pour cette période.')+'</td></tr>';
+    }else{
+      rows.forEach(function(p){
+        var a=p.a;
+        var daysHtml=p.days.length
+          ? ('<div class="text-[10px] text-slate-500 mt-1">'+p.days.map(function(d){return fd(d);}).join(' · ')+'</div>')
+          : '<div class="text-[10px] text-slate-600 mt-1">Aucune soirée pointée</div>';
+        var payBtn=p.paid
+          ? '<button type="button" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-xs font-semibold" data-act="cpaid" data-k="'+esc(p.k)+'">✓ Payé</button>'
+          : '<button type="button" class="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs font-semibold" data-act="cpaid" data-k="'+esc(p.k)+'">À payer</button>';
+        tb+='<tr class="border-t border-slate-800/70'+(p.n?'':' opacity-60')+'">'+
+          '<td class="px-3 py-3 align-middle"><div class="flex items-center gap-2">'+av(a)+
+            '<div><div class="font-semibold text-white">'+esc(a.nom||'Sans nom')+'</div>'+
+            '<div class="text-[11px] text-slate-400">'+esc(catLabel(a))+'</div>'+daysHtml+'</div></div></td>'+
+          '<td class="px-3 py-3 align-middle text-center font-bold text-white">'+p.n+'</td>'+
+          '<td class="px-3 py-3 align-middle">'+money(p.tf)+'<span class="text-slate-500 text-[10px]"> /soir</span></td>'+
+          '<td class="px-3 py-3 align-middle font-bold text-white">'+money(p.net)+'</td>'+
+          '<td class="px-3 py-3 align-middle">'+payBtn+'</td>'+
+          '<td class="px-3 py-3 align-middle"><button type="button" class="'+BTN+'" data-act="cslip" data-id="'+esc(String(a.id))+'" title="Feuille de paie">📄 Paie</button></td>'+
+        '</tr>';
+      });
+    }
+
+    var table='<div class="overflow-x-auto rp-panel max-w-full">'+
+      '<table class="w-full text-sm"><thead><tr>'+
+      ['Agent','Soirées','Tarif / soir','Net à payer','Paiement',''].map(function(t){
+        return '<th class="text-left px-3 py-3 text-xs text-slate-400 font-semibold">'+t+'</th>';
+      }).join('')+
+      '</tr></thead><tbody>'+tb+'</tbody></table></div>';
+
+    var help='<p class="text-xs text-slate-500 mt-3">Le salaire est calculé <b>par soirée pointée</b> (tarif × nombre de soirs validés au pointage). Clique sur <b>À payer</b> pour marquer comme <b>Payé</b> (et inversement). Les agents sans pointage sur la période apparaissent grisés.</p>';
+
+    return bar+cards+table+help;
+  }catch(err){
+    console.error('[SEV] vCompta',err);
+    return '<div class="rp-panel p-6"><p class="text-rose-400 font-semibold">Erreur comptabilité : '+esc(err&&err.message?err.message:String(err))+'</p><p class="text-slate-400 text-sm mt-2">Ouvre la console (F12) pour plus de détails.</p></div>';
+  }
 }
+
 function slipHTML(p,r){
   var a=p.a,m=a.remu==='m',f99=is1099(a),GOLD='#4aa3ff',
   mk=function(x){return x?'•••• '+String(x).slice(-4):'';},
@@ -2740,7 +2833,7 @@ function slipHTML(p,r){
   +'<div style="display:flex;align-items:center;gap:14px;margin-top:18px;padding:14px;background:#08122b;border:1px solid #1a2c52;border-radius:14px">'
     +'<div style="width:56px;height:56px;border-radius:14px;overflow:hidden;flex:none;background:#0d1b3b;border:1px solid #24386a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:'+GOLD+'">'+av2+'</div>'
     +'<div style="min-width:0;flex:1"><div style="font-size:17px;font-weight:800;color:#fff">'+esc(a.nom)+'</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">'+esc(a.poste||a.grade||'')+(a.matricule?' · <span style="font-family:\'JetBrains Mono\',monospace">#'+esc(a.matricule)+'</span>':'')+'</div>'
-    +'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">'+chip(CATS[catOf(a)][0],CATS[catOf(a)][1])+chip(CT[a.contrat||(catOf(a)==='secu_free'?'1099':'W2F')],'#94a3b8')+(idn[1]?chip(idn[0]+' '+idn[1],'#64748b'):'')+'</div></div>'
+    +'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">'+chip(catLabel(a),catColor(a))+chip(CT[a.contrat||(catOf(a)==='secu_free'?'1099':'W2F')],'#94a3b8')+(idn[1]?chip(idn[0]+' '+idn[1],'#64748b'):'')+'</div></div>'
   +'</div>'
   /* soirées */
   +(m?'':lab('Soirées pointées · '+p.n)+'<div style="background:#08122b;border:1px solid #1a2c52;border-radius:14px;overflow:hidden"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#0d1b3b">'+th('Date')+th('Arrivée')+th('Fin')+th('Durée',1)+'</tr></thead><tbody>'+(ents||'<tr><td colspan="4" style="padding:14px;text-align:center;color:#64748b;font-style:italic">Aucun pointage sur la période.</td></tr>')+'</tbody></table></div>')
@@ -2809,23 +2902,30 @@ async function sendPayrollPngToDiscord(a,p,r){
   if(!response.ok) throw new Error(result.error||('Erreur Discord / Worker ('+response.status+').'));
   return result;
 }
-ACT.cpaid=async function(t){
-  var k=t.dataset.k,paid=C().paid;
-  if(paid[k]){delete paid[k];saveP();drawView();etat('Paiement repassé à « À payer ».');return;}
-  var r=cRange(),p=cRows(r).find(function(x){return x.k===k;});
-  if(!p){etat('Impossible de retrouver la fiche de paie.');return;}
-  p.paid=true;t.disabled=true;t.textContent='Envoi PNG…';
-  try{
-    await sendPayrollPngToDiscord(p.a,p,r);
-    paid[k]=1;saveP();drawView();
-    etat('Paiement validé — fiche PNG envoyée sur Discord.');
-  }catch(err){
-    p.paid = false;
-    console.error('[SEV Discord]',err);t.disabled=false;t.textContent='À payer';
-    etat('Envoi Discord impossible : '+(err&&err.message?err.message:'erreur inconnue'));
-    alert('La fiche de paie n’a pas été envoyée. Le paiement reste « À payer ».\n\n'+(err&&err.message?err.message:'Erreur inconnue'));
+ACT.cpaid=function(t){
+  var k=t.dataset.k;if(!k)return;
+  var paid=C().paid;
+  if(paid[k]){
+    delete paid[k];
+    saveP();drawView();
+    etat('Repassé en « À payer ».');
+    return;
   }
-};
+  paid[k]=1;
+  saveP();drawView();
+  etat('Marqué comme payé.');
+  // Envoi Discord optionnel (ne bloque pas le statut payé)
+  try{
+    var r=cRange(),p=cRows(r).find(function(x){return x.k===k;});
+    if(p&&typeof sendPayrollPngToDiscord==='function'){
+      sendPayrollPngToDiscord(p.a,p,r).then(function(){
+        etat('Payé — fiche PNG envoyée sur Discord.');
+      }).catch(function(err){
+        console.warn('[SEV Discord]',err);
+      });
+    }
+  }catch(e){console.warn(e);}
+}
 ACT.cslip=function(t){var a=byId(t.dataset.id);if(!a)return;SL=a.id;$('slipBody').innerHTML=slipHTML(cPay(a,cRange()),cRange());$('slip').showModal();};
 ACT.slipclose=function(){$('slip').close();};
 function loadH2C(cb,onError){
@@ -2859,7 +2959,7 @@ ACT.slipcopy=function(){var a=byId(SL);if(!a)return;var tx=slipText(cPay(a,cRang
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(ok,function(){etat('Copie impossible.');});}
   else{var ta=document.createElement('textarea');ta.value=tx;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){etat('Copie impossible.');}ta.remove();}};
 ACT.ccsv=function(){var r=cRange(),x=[['Agent','Matricule','Catégorie','Soirées','Brut (USD)','Prime','Retenue','Net à payer','Charges patronales','Coût total','Paiement']];
-  cRows(r).forEach(function(p){x.push([p.a.nom,p.a.matricule||'',CATS[catOf(p.a)][0],p.n,p.g.toFixed(2),p.pr.toFixed(2),p.de.toFixed(2),p.net.toFixed(2),p.tax.toFixed(2),p.cost.toFixed(2),p.paid?'Payé':'À payer']);});
+  cRows(r).forEach(function(p){x.push([p.a.nom,p.a.matricule||'',catLabel(p.a),p.n,p.g.toFixed(2),p.pr.toFixed(2),p.de.toFixed(2),p.net.toFixed(2),p.tax.toFixed(2),p.cost.toFixed(2),p.paid?'Payé':'À payer']);});
   var csv='\ufeff'+x.map(function(l){return l.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   var u=URL.createObjectURL(new Blob([csv],{type:'text/csv'})),l=document.createElement('a');l.href=u;l.download='compta-'+r.f+'_'+r.t+'.csv';document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);etat('Export de la comptabilité réalisé.');};
 document.addEventListener('change',function(e){
